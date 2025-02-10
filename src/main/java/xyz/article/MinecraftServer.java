@@ -45,8 +45,6 @@ public class MinecraftServer {
     private static final Logger logger = LoggerFactory.getLogger(MinecraftServer.class);
     private static final String ADDRESS = "127.0.0.1";
     private static final int PORT = 25565;
-    private static final boolean ENCRYPT_CONNECTION = false;
-    private static final boolean SHOULD_AUTHENTICATE = false;
     private static final ProxyInfo AUTH_PROXY = null;
     public static final List<Session> playerSessions = new ArrayList<>();
     private static final List<GameProfile> playerProfiles = new ArrayList<>();
@@ -63,8 +61,8 @@ public class MinecraftServer {
 
         Server server = new TcpServer(ADDRESS, PORT, MinecraftProtocol::new);
         server.setGlobalFlag(MinecraftConstants.SESSION_SERVICE_KEY, sessionService);
-        server.setGlobalFlag(MinecraftConstants.ENCRYPT_CONNECTION, ENCRYPT_CONNECTION);
-        server.setGlobalFlag(MinecraftConstants.SHOULD_AUTHENTICATE, SHOULD_AUTHENTICATE);
+        server.setGlobalFlag(MinecraftConstants.ENCRYPT_CONNECTION, RunningData.ONLINE_MODE);
+        server.setGlobalFlag(MinecraftConstants.SHOULD_AUTHENTICATE, RunningData.ONLINE_MODE);
         server.setGlobalFlag(MinecraftConstants.SERVER_INFO_BUILDER_KEY, session ->
                 new ServerStatusInfo(
                         Component.text("§cSlider§bMC §7- §eWelcome!"),
