@@ -1,10 +1,14 @@
 package xyz.article;
 
+import com.google.gson.JsonElement;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.cloudburstmc.math.vector.Vector2i;
 import org.cloudburstmc.math.vector.Vector3i;
+import org.cloudburstmc.nbt.NBTInputStream;
+import org.cloudburstmc.nbt.NbtMap;
+import org.cloudburstmc.nbt.NbtUtils;
 import org.geysermc.mcprotocollib.auth.GameProfile;
 import org.geysermc.mcprotocollib.auth.SessionService;
 import org.geysermc.mcprotocollib.network.ProxyInfo;
@@ -20,6 +24,7 @@ import org.geysermc.mcprotocollib.network.tcp.TcpServer;
 import org.geysermc.mcprotocollib.protocol.MinecraftConstants;
 import org.geysermc.mcprotocollib.protocol.MinecraftProtocol;
 import org.geysermc.mcprotocollib.protocol.codec.MinecraftCodec;
+import org.geysermc.mcprotocollib.protocol.codec.NbtComponentSerializer;
 import org.geysermc.mcprotocollib.protocol.data.game.chunk.ChunkBiomeData;
 import org.geysermc.mcprotocollib.protocol.data.game.chunk.ChunkSection;
 import org.geysermc.mcprotocollib.protocol.data.game.chunk.DataPalette;
@@ -55,6 +60,7 @@ public class MinecraftServer {
     private static final ProxyInfo AUTH_PROXY = null;
     public static final List<Session> playerSessions = new ArrayList<>();
     private static final List<GameProfile> playerProfiles = new ArrayList<>();
+    protected static TcpServer server;
 
     public static void main(String[] args) throws IOException {
         new WhenClose();
@@ -66,7 +72,7 @@ public class MinecraftServer {
         SessionService sessionService = new SessionService();
         sessionService.setProxy(AUTH_PROXY);
 
-        Server server = new TcpServer(Settings.BIND_ADDRESS, Settings.SERVER_PORT, MinecraftProtocol::new);
+        server = new TcpServer(Settings.BIND_ADDRESS, Settings.SERVER_PORT, MinecraftProtocol::new);
         server.setGlobalFlag(MinecraftConstants.SESSION_SERVICE_KEY, sessionService);
         server.setGlobalFlag(MinecraftConstants.ENCRYPT_CONNECTION, Settings.ONLINE_MODE);
         server.setGlobalFlag(MinecraftConstants.SHOULD_AUTHENTICATE, Settings.ONLINE_MODE);
@@ -137,30 +143,9 @@ public class MinecraftServer {
                             for (Session session1 : playerSessions) {
                                 session1.send(new ClientboundSystemChatPacket(msg, false));
                             }
-                        }else if (packet instanceof ServerboundPlayerActionPacket actionPacket) {
-                            if (actionPacket.getAction().equals(PlayerAction.FINISH_DIGGING)) {
-                                Vector3i blockPos = actionPacket.getPosition();
-                                int blockX = blockPos.getX();
-                                int blockY = blockPos.getY();
-                                int blockZ = blockPos.getZ();
-                                int chunkX = blockX >> 4;
-                                int chunkZ = blockZ >> 4;
-                                int sectionHeight = 16; // 每个section(子区块)的高度
-                                int worldBottom = -64; // 世界底部的Y坐标
-                                int sectionIndex = (blockY - worldBottom) / sectionHeight;
-                                ChunkData chunkData = ChunkManager.chunkDataMap.get(Vector2i.from(chunkX, chunkZ));
-                                if (chunkData != null) {
-                                    ChunkSection[] chunkSections = chunkData.getChunkSections();
-                                    chunkSections[sectionIndex].setBlock(blockX & 15, blockY & 15, blockZ & 15, 0);
-                                    ChunkManager.chunkDataMap.get(Vector2i.from(chunkX, chunkZ)).setChunkSections(chunkSections);
-                                    session.send(ChunkManager.chunkDataMap.get(Vector2i.from(chunkX, chunkZ)).getChunkPacket());
-                                    System.out.println("SectionIndex = " + sectionIndex + ", BlockY = " + blockY);
-                                    session.send(new ClientboundBlockChangedAckPacket(actionPacket.getSequence()));
-                                } else {
-                                    logger.error("Chunk Data (x{}, z{}) is null!", chunkX, chunkZ);
-                                }
-                            }
-                        }else if (packet instanceof ServerboundUseItemOnPacket useItemOnPacket) {
+                        } else if (packet instanceof ServerboundPlayerActionPacket actionPacket) {
+
+                        } else if (packet instanceof ServerboundUseItemOnPacket useItemOnPacket) {
                             Vector3i blockPos = useItemOnPacket.getPosition();
                             int blockX = blockPos.getX();
                             int blockY = blockPos.getY();
@@ -191,8 +176,8 @@ public class MinecraftServer {
                             }
 
                             // 计算新方块的chunk坐标
-                            int chunkX = blockX >> 4;
-                            int chunkZ = blockZ >> 4;
+                            int chunkX = blockX / 16;
+                            int chunkZ = blockZ / 16;
 
                             // 计算新方块的子区块索引
                             int sectionHeight = 16; // 每个section(子区块)的高度
@@ -206,15 +191,22 @@ public class MinecraftServer {
 
                                 // 确保子区块索引在有效范围内
                                 if (sectionIndex >= 0 && sectionIndex < chunkSections.length) {
+                                    // 计算区块内的相对坐标
+                                    int localX = blockX & 15;
+                                    int localY = blockY & 15;
+                                    int localZ = blockZ & 15;
+
                                     // 设置新方块
-                                    chunkSections[sectionIndex].setBlock(blockX & 15, blockY & 15, blockZ & 15, 6);
+                                    chunkSections[sectionIndex].setBlock(localX, localY, localZ, 6);
                                     ChunkManager.chunkDataMap.get(Vector2i.from(chunkX, chunkZ)).setChunkSections(chunkSections);
 
                                     // 发送区块更新包
-                                    session.send(new ClientboundSectionBlocksUpdatePacket(blockPos.getX() >> 4, blockPos.getY() >> 4, blockPos.getZ() >> 4, new BlockChangeEntry(Vector3i.from(blockX & 15, blockY & 15, blockZ & 15), 6)));
                                     session.send(new ClientboundBlockChangedAckPacket(useItemOnPacket.getSequence()));
+                                    for (Session session1 : playerSessions) {
+                                        session1.send(new ClientboundSectionBlocksUpdatePacket(chunkX, blockY / 16, chunkZ, new BlockChangeEntry(Vector3i.from(localX, localY, localZ), 6)));
+                                    }
 
-                                    System.out.println("SectionIndex = " + sectionIndex + ", X = " + blockX + ", Y = " + blockY + ", Z = " + blockZ + ", 新方块应在" + (blockX) + ", " + (blockY) + ", " + (blockZ));
+                                    System.out.println("SectionIndex = " + sectionIndex + ", 新方块应在" + (blockX) + ", " + (blockY) + ", " + (blockZ));
                                 } else {
                                     logger.error("Invalid section index: {}", sectionIndex);
                                 }

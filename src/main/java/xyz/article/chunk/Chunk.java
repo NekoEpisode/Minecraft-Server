@@ -38,6 +38,14 @@ public class Chunk {
                 }
             }
         }
+        ChunkSection chunkSection1 = chunkSections[3];
+        for (int y = 0; y < 16; y++) {
+            for (int z = 0; z < 16; z++) {
+                for (int x = 0; x < 16; x++) {
+                    chunkSection1.setBlock(x, y, z, 9);
+                }
+            }
+        }
 
         return new ChunkData(chunkX, chunkZ, chunkSections, new HeightMap(), new BlockEntityInfo[]{}, new LightUpdateData(new BitSet(), new BitSet(), new BitSet(), new BitSet(), List.of(new byte[]{(byte) 2048}), List.of(new byte[]{(byte) 2048})));
     }
