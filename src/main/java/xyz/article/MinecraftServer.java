@@ -3,6 +3,8 @@ package xyz.article;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.cloudburstmc.math.vector.Vector2i;
+import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.mcprotocollib.auth.GameProfile;
 import org.geysermc.mcprotocollib.auth.SessionService;
 import org.geysermc.mcprotocollib.network.ProxyInfo;
@@ -18,20 +20,32 @@ import org.geysermc.mcprotocollib.network.tcp.TcpServer;
 import org.geysermc.mcprotocollib.protocol.MinecraftConstants;
 import org.geysermc.mcprotocollib.protocol.MinecraftProtocol;
 import org.geysermc.mcprotocollib.protocol.codec.MinecraftCodec;
+import org.geysermc.mcprotocollib.protocol.data.game.chunk.ChunkBiomeData;
+import org.geysermc.mcprotocollib.protocol.data.game.chunk.ChunkSection;
+import org.geysermc.mcprotocollib.protocol.data.game.chunk.DataPalette;
+import org.geysermc.mcprotocollib.protocol.data.game.entity.object.Direction;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.GameMode;
+import org.geysermc.mcprotocollib.protocol.data.game.entity.player.Hand;
+import org.geysermc.mcprotocollib.protocol.data.game.entity.player.PlayerAction;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.PlayerSpawnInfo;
+import org.geysermc.mcprotocollib.protocol.data.game.level.block.BlockChangeEntry;
 import org.geysermc.mcprotocollib.protocol.data.status.PlayerInfo;
 import org.geysermc.mcprotocollib.protocol.data.status.ServerStatusInfo;
 import org.geysermc.mcprotocollib.protocol.data.status.VersionInfo;
 import org.geysermc.mcprotocollib.protocol.packet.common.clientbound.ClientboundDisconnectPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundLoginPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundSystemChatPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundBlockChangedAckPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundPlayerPositionPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundSetChunkCacheCenterPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.*;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.ServerboundChatPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundPlayerActionPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundUseItemOnPacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import xyz.article.chunk.Chunk;
+import xyz.article.chunk.ChunkData;
+import xyz.article.chunk.ChunkManager;
 
 import java.io.*;
 import java.util.*;
@@ -95,7 +109,11 @@ public class MinecraftServer {
                     playerProfiles.add(profile);
 
                     session.send(new ClientboundSetChunkCacheCenterPacket(0, 0));
-                    session.send(Chunk.createSimpleGrassChunk().getChunkPacket());
+                    for (int x = -4; x < 4; x++) {
+                        for (int z = -4; z < 4; z++) {
+                            session.send(Chunk.createSimpleGrassChunk(x, z).getChunkPacket());
+                        }
+                    }
                 }
         );
 
@@ -129,11 +147,73 @@ public class MinecraftServer {
                             for (Session session1 : playerSessions) {
                                 session1.send(new ClientboundSystemChatPacket(msg, false));
                             }
-                        }/*else if (packet instanceof ServerboundMovePlayerPosPacket movePacket) {
-                            int chunkX = ((int) movePacket.getX()) >> 4;
-                            int chunkZ = ((int) movePacket.getZ()) >> 4;
-                            session.send(new ClientboundSetChunkCacheCenterPacket(chunkX, chunkZ));
-                        }*/
+                        }else if (packet instanceof ServerboundPlayerActionPacket actionPacket) {
+                            if (actionPacket.getAction().equals(PlayerAction.FINISH_DIGGING)) {
+                                Vector3i blockPos = actionPacket.getPosition();
+                                int blockX = blockPos.getX();
+                                int blockY = blockPos.getY();
+                                int blockZ = blockPos.getZ();
+                                int chunkX = blockX >> 4;
+                                int chunkZ = blockZ >> 4;
+                                int sectionHeight = 16; // 每个section(子区块)的高度
+                                int worldBottom = -64; // 世界底部的Y坐标
+                                int sectionIndex = (blockY - worldBottom) / sectionHeight;
+                                ChunkData chunkData = ChunkManager.chunkDataMap.get(Vector2i.from(chunkX, chunkZ));
+                                if (chunkData != null) {
+                                    ChunkSection[] chunkSections = chunkData.getChunkSections();
+                                    chunkSections[sectionIndex].setBlock(blockX & 15, blockY & 15, blockZ & 15, 0);
+                                    ChunkManager.chunkDataMap.get(Vector2i.from(chunkX, chunkZ)).setChunkSections(chunkSections);
+                                    session.send(ChunkManager.chunkDataMap.get(Vector2i.from(chunkX, chunkZ)).getChunkPacket());
+                                    System.out.println("SectionIndex = " + sectionIndex + ", BlockY = " + blockY);
+                                    session.send(new ClientboundBlockChangedAckPacket(actionPacket.getSequence()));
+                                } else {
+                                    logger.error("Chunk Data (x{}, z{}) is null!", chunkX, chunkZ);
+                                }
+                            }
+                        }else if (packet instanceof ServerboundUseItemOnPacket useItemOnPacket) {
+                            Vector3i blockPos = useItemOnPacket.getPosition();
+                            int blockX = blockPos.getX();
+                            int blockY = blockPos.getY();
+                            int blockZ = blockPos.getZ();
+                            switch (useItemOnPacket.getFace()) {
+                                case UP:
+                                    blockY++;
+                                    break;
+                                case DOWN:
+                                    blockY--;
+                                    break;
+                                case NORTH:
+                                    blockZ--;
+                                    break;
+                                case SOUTH:
+                                    blockZ++;
+                                    break;
+                                case WEST:
+                                    blockX--;
+                                    break;
+                                case EAST:
+                                    blockX++;
+                                    break;
+                                default:
+                                    throw new IllegalArgumentException("Unexpected direction: " + useItemOnPacket.getFace());
+                            }
+                            int chunkX = blockX >> 4;
+                            int chunkZ = blockZ >> 4;
+                            int sectionHeight = 16; // 每个section(子区块)的高度
+                            int worldBottom = -64; // 世界底部的Y坐标
+                            int sectionIndex = (blockY - worldBottom) / sectionHeight;
+                            ChunkData chunkData = ChunkManager.chunkDataMap.get(Vector2i.from(chunkX, chunkZ));
+                            if (chunkData != null) {
+                                ChunkSection[] chunkSections = chunkData.getChunkSections();
+                                chunkSections[sectionIndex].setBlock(blockX & 15, blockY & 15, blockZ & 15, 6);
+                                ChunkManager.chunkDataMap.get(Vector2i.from(chunkX, chunkZ)).setChunkSections(chunkSections);
+                                session.send(new ClientboundSectionBlocksUpdatePacket(blockPos.getX() >> 4, blockPos.getY() >> 4, blockPos.getZ() >> 4, new BlockChangeEntry(Vector3i.from(blockX & 15, blockY & 15, blockZ & 15), 6)));
+                                System.out.println("SectionIndex = " + sectionIndex + ", BlockY = " + blockY);
+                                session.send(new ClientboundBlockChangedAckPacket(useItemOnPacket.getSequence()));
+                            } else {
+                                logger.error("Chunk Data (x{}, z{}) is null!", chunkX, chunkZ);
+                            }
+                        }
                     }
                 });
             }
