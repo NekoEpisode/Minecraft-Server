@@ -27,9 +27,11 @@ import org.geysermc.mcprotocollib.protocol.packet.common.clientbound.Clientbound
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundLoginPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundSystemChatPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundPlayerPositionPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundSetChunkCacheCenterPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.ServerboundChatPacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import xyz.article.chunk.Chunk;
 
 import java.io.*;
 import java.util.*;
@@ -81,7 +83,7 @@ public class MinecraftServer {
                         return;
                     }
 
-                    ProtocolSender.sendBrand("Slider", session);
+                    ProtocolSender.sendBrand("SliderMC", session);
                     session.send(new ClientboundLoginPacket(0, false, new Key[]{Key.key("minecraft:world")}, 0, 16, 16, false, false, false, new PlayerSpawnInfo(0, Key.key("minecraft:world"), 100, GameMode.CREATIVE, GameMode.CREATIVE, false, false, null, 100), true));
 
                     logger.info("{} 加入了游戏", profile.getName());
@@ -91,6 +93,9 @@ public class MinecraftServer {
                         session1.send(new ClientboundSystemChatPacket(component, false));
                     }
                     playerProfiles.add(profile);
+
+                    session.send(new ClientboundSetChunkCacheCenterPacket(0, 0));
+                    session.send(Chunk.createSimpleGrassChunk().getChunkPacket());
                 }
         );
 
@@ -124,7 +129,11 @@ public class MinecraftServer {
                             for (Session session1 : playerSessions) {
                                 session1.send(new ClientboundSystemChatPacket(msg, false));
                             }
-                        }
+                        }/*else if (packet instanceof ServerboundMovePlayerPosPacket movePacket) {
+                            int chunkX = ((int) movePacket.getX()) >> 4;
+                            int chunkZ = ((int) movePacket.getZ()) >> 4;
+                            session.send(new ClientboundSetChunkCacheCenterPacket(chunkX, chunkZ));
+                        }*/
                     }
                 });
             }
