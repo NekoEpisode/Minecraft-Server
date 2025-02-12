@@ -57,6 +57,7 @@ public class MinecraftServer {
     private static final List<GameProfile> playerProfiles = new ArrayList<>();
 
     public static void main(String[] args) throws IOException {
+        new WhenClose();
         File propertiesFile = new File("./settings.yml");
         if (propertiesFile.createNewFile()) logger.info("已创建所需文件");
 
@@ -130,17 +131,6 @@ public class MinecraftServer {
                     @Override
                     public void packetReceived(Session session, Packet packet) {
                         if (packet instanceof ServerboundChatPacket chatPacket) {
-                            if (chatPacket.getMessage().startsWith(".tp")) {
-                                session.send(new ClientboundPlayerPositionPacket(
-                                        0D,
-                                        64D,
-                                        0D,
-                                        0F,
-                                        0F,
-                                        1
-                                ));
-                                return;
-                            }
                             GameProfile profile = event.getSession().getFlag(MinecraftConstants.PROFILE_KEY);
                             logger.info("{}: {}", profile.getName(), chatPacket.getMessage());
                             Component msg = Component.text("<" + profile.getName() + "> " + chatPacket.getMessage());
@@ -175,6 +165,8 @@ public class MinecraftServer {
                             int blockX = blockPos.getX();
                             int blockY = blockPos.getY();
                             int blockZ = blockPos.getZ();
+
+                            // 根据玩家点击的面对坐标进行修正
                             switch (useItemOnPacket.getFace()) {
                                 case UP:
                                     blockY++;
@@ -197,19 +189,35 @@ public class MinecraftServer {
                                 default:
                                     throw new IllegalArgumentException("Unexpected direction: " + useItemOnPacket.getFace());
                             }
+
+                            // 计算新方块的chunk坐标
                             int chunkX = blockX >> 4;
                             int chunkZ = blockZ >> 4;
+
+                            // 计算新方块的子区块索引
                             int sectionHeight = 16; // 每个section(子区块)的高度
                             int worldBottom = -64; // 世界底部的Y坐标
                             int sectionIndex = (blockY - worldBottom) / sectionHeight;
+
+                            // 获取chunk数据
                             ChunkData chunkData = ChunkManager.chunkDataMap.get(Vector2i.from(chunkX, chunkZ));
                             if (chunkData != null) {
                                 ChunkSection[] chunkSections = chunkData.getChunkSections();
-                                chunkSections[sectionIndex].setBlock(blockX & 15, blockY & 15, blockZ & 15, 6);
-                                ChunkManager.chunkDataMap.get(Vector2i.from(chunkX, chunkZ)).setChunkSections(chunkSections);
-                                session.send(new ClientboundSectionBlocksUpdatePacket(blockPos.getX() >> 4, blockPos.getY() >> 4, blockPos.getZ() >> 4, new BlockChangeEntry(Vector3i.from(blockX & 15, blockY & 15, blockZ & 15), 6)));
-                                System.out.println("SectionIndex = " + sectionIndex + ", BlockY = " + blockY);
-                                session.send(new ClientboundBlockChangedAckPacket(useItemOnPacket.getSequence()));
+
+                                // 确保子区块索引在有效范围内
+                                if (sectionIndex >= 0 && sectionIndex < chunkSections.length) {
+                                    // 设置新方块
+                                    chunkSections[sectionIndex].setBlock(blockX & 15, blockY & 15, blockZ & 15, 6);
+                                    ChunkManager.chunkDataMap.get(Vector2i.from(chunkX, chunkZ)).setChunkSections(chunkSections);
+
+                                    // 发送区块更新包
+                                    session.send(new ClientboundSectionBlocksUpdatePacket(blockPos.getX() >> 4, blockPos.getY() >> 4, blockPos.getZ() >> 4, new BlockChangeEntry(Vector3i.from(blockX & 15, blockY & 15, blockZ & 15), 6)));
+                                    session.send(new ClientboundBlockChangedAckPacket(useItemOnPacket.getSequence()));
+
+                                    System.out.println("SectionIndex = " + sectionIndex + ", X = " + blockX + ", Y = " + blockY + ", Z = " + blockZ + ", 新方块应在" + (blockX) + ", " + (blockY) + ", " + (blockZ));
+                                } else {
+                                    logger.error("Invalid section index: {}", sectionIndex);
+                                }
                             } else {
                                 logger.error("Chunk Data (x{}, z{}) is null!", chunkX, chunkZ);
                             }
