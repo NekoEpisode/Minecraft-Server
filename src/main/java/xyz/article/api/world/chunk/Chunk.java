@@ -1,5 +1,6 @@
-package xyz.article.chunk;
+package xyz.article.api.world.chunk;
 
+import org.cloudburstmc.math.vector.Vector2i;
 import org.geysermc.mcprotocollib.protocol.data.game.chunk.BitStorage;
 import org.geysermc.mcprotocollib.protocol.data.game.chunk.ChunkSection;
 import org.geysermc.mcprotocollib.protocol.data.game.chunk.DataPalette;
@@ -7,6 +8,7 @@ import org.geysermc.mcprotocollib.protocol.data.game.chunk.palette.GlobalPalette
 import org.geysermc.mcprotocollib.protocol.data.game.chunk.palette.PaletteType;
 import org.geysermc.mcprotocollib.protocol.data.game.level.LightUpdateData;
 import org.geysermc.mcprotocollib.protocol.data.game.level.block.BlockEntityInfo;
+import xyz.article.MinecraftServer;
 
 import java.util.BitSet;
 import java.util.List;
@@ -47,6 +49,6 @@ public class Chunk {
             }
         }
 
-        return new ChunkData(chunkX, chunkZ, chunkSections, new HeightMap(), new BlockEntityInfo[]{}, new LightUpdateData(new BitSet(), new BitSet(), new BitSet(), new BitSet(), List.of(new byte[]{(byte) 2048}), List.of(new byte[]{(byte) 2048})));
+        return new ChunkData(new ChunkPos(MinecraftServer.overworld, Vector2i.from(chunkX, chunkZ)), chunkSections, new HeightMap(), new BlockEntityInfo[]{}, new LightUpdateData(new BitSet(), new BitSet(), new BitSet(), new BitSet(), List.of(new byte[]{(byte) 2048}), List.of(new byte[]{(byte) 2048})));
     }
 }

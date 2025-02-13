@@ -1,4 +1,4 @@
-package xyz.article.chunk;
+package xyz.article.api.world.chunk;
 
 import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.nbt.NbtMapBuilder;

@@ -1,18 +1,13 @@
 package xyz.article;
 
-import com.google.gson.JsonElement;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.cloudburstmc.math.vector.Vector2i;
 import org.cloudburstmc.math.vector.Vector3i;
-import org.cloudburstmc.nbt.NBTInputStream;
-import org.cloudburstmc.nbt.NbtMap;
-import org.cloudburstmc.nbt.NbtUtils;
 import org.geysermc.mcprotocollib.auth.GameProfile;
 import org.geysermc.mcprotocollib.auth.SessionService;
 import org.geysermc.mcprotocollib.network.ProxyInfo;
-import org.geysermc.mcprotocollib.network.Server;
 import org.geysermc.mcprotocollib.network.Session;
 import org.geysermc.mcprotocollib.network.event.server.ServerAdapter;
 import org.geysermc.mcprotocollib.network.event.server.ServerClosedEvent;
@@ -24,14 +19,8 @@ import org.geysermc.mcprotocollib.network.tcp.TcpServer;
 import org.geysermc.mcprotocollib.protocol.MinecraftConstants;
 import org.geysermc.mcprotocollib.protocol.MinecraftProtocol;
 import org.geysermc.mcprotocollib.protocol.codec.MinecraftCodec;
-import org.geysermc.mcprotocollib.protocol.codec.NbtComponentSerializer;
-import org.geysermc.mcprotocollib.protocol.data.game.chunk.ChunkBiomeData;
 import org.geysermc.mcprotocollib.protocol.data.game.chunk.ChunkSection;
-import org.geysermc.mcprotocollib.protocol.data.game.chunk.DataPalette;
-import org.geysermc.mcprotocollib.protocol.data.game.entity.object.Direction;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.GameMode;
-import org.geysermc.mcprotocollib.protocol.data.game.entity.player.Hand;
-import org.geysermc.mcprotocollib.protocol.data.game.entity.player.PlayerAction;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.PlayerSpawnInfo;
 import org.geysermc.mcprotocollib.protocol.data.game.level.block.BlockChangeEntry;
 import org.geysermc.mcprotocollib.protocol.data.status.PlayerInfo;
@@ -41,19 +30,22 @@ import org.geysermc.mcprotocollib.protocol.packet.common.clientbound.Clientbound
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundLoginPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundSystemChatPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundBlockChangedAckPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundPlayerPositionPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.*;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundSectionBlocksUpdatePacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundSetChunkCacheCenterPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.ServerboundChatPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundPlayerActionPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundUseItemOnPacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import xyz.article.chunk.Chunk;
-import xyz.article.chunk.ChunkData;
-import xyz.article.chunk.ChunkManager;
+import xyz.article.api.world.World;
+import xyz.article.api.world.WorldManager;
+import xyz.article.api.world.chunk.Chunk;
+import xyz.article.api.world.chunk.ChunkData;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MinecraftServer {
     private static final Logger logger = LoggerFactory.getLogger(MinecraftServer.class);
@@ -61,6 +53,7 @@ public class MinecraftServer {
     public static final List<Session> playerSessions = new ArrayList<>();
     private static final List<GameProfile> playerProfiles = new ArrayList<>();
     protected static TcpServer server;
+    public static World overworld;
 
     public static void main(String[] args) throws IOException {
         new WhenClose();
@@ -71,6 +64,8 @@ public class MinecraftServer {
 
         SessionService sessionService = new SessionService();
         sessionService.setProxy(AUTH_PROXY);
+
+        overworld = new World(Key.key("minecraft:overworld"));
 
         server = new TcpServer(Settings.BIND_ADDRESS, Settings.SERVER_PORT, MinecraftProtocol::new);
         server.setGlobalFlag(MinecraftConstants.SESSION_SERVICE_KEY, sessionService);
@@ -105,7 +100,9 @@ public class MinecraftServer {
                     }
 
                     ProtocolSender.sendBrand("SliderMC", session);
-                    session.send(new ClientboundLoginPacket(0, false, new Key[]{Key.key("minecraft:world")}, 0, 16, 16, false, false, false, new PlayerSpawnInfo(0, Key.key("minecraft:world"), 100, GameMode.CREATIVE, GameMode.CREATIVE, false, false, null, 100), true));
+                    List<Key> worldNames = new ArrayList<>();
+                    WorldManager.worldMap.forEach((key, world) -> worldNames.add(key));
+                    session.send(new ClientboundLoginPacket(0, false, worldNames.toArray(new Key[0]), 0, 16, 16, false, false, false, new PlayerSpawnInfo(0, Key.key("minecraft:overworld"), 100, GameMode.CREATIVE, GameMode.CREATIVE, false, false, null, 100), true));
 
                     logger.info("{} 加入了游戏", profile.getName());
                     playerSessions.add(session);
@@ -185,7 +182,7 @@ public class MinecraftServer {
                             int sectionIndex = (blockY - worldBottom) / sectionHeight;
 
                             // 获取chunk数据
-                            ChunkData chunkData = ChunkManager.chunkDataMap.get(Vector2i.from(chunkX, chunkZ));
+                            ChunkData chunkData = overworld.getChunkDataMap().get(Vector2i.from(chunkX, chunkZ));
                             if (chunkData != null) {
                                 ChunkSection[] chunkSections = chunkData.getChunkSections();
 
@@ -198,7 +195,7 @@ public class MinecraftServer {
 
                                     // 设置新方块
                                     chunkSections[sectionIndex].setBlock(localX, localY, localZ, 6);
-                                    ChunkManager.chunkDataMap.get(Vector2i.from(chunkX, chunkZ)).setChunkSections(chunkSections);
+                                    overworld.getChunkDataMap().get(Vector2i.from(chunkX, chunkZ)).setChunkSections(chunkSections);
 
                                     // 发送区块更新包
                                     session.send(new ClientboundBlockChangedAckPacket(useItemOnPacket.getSequence()));
