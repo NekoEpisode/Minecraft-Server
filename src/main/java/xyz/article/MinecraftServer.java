@@ -173,8 +173,8 @@ public class MinecraftServer {
                             }
 
                             // 计算新方块的chunk坐标
-                            int chunkX = blockX / 16;
-                            int chunkZ = blockZ / 16;
+                            int chunkX = blockX >> 4;
+                            int chunkZ = blockZ >> 4;
 
                             // 计算新方块的子区块索引
                             int sectionHeight = 16; // 每个section(子区块)的高度
@@ -200,7 +200,7 @@ public class MinecraftServer {
                                     // 发送区块更新包
                                     session.send(new ClientboundBlockChangedAckPacket(useItemOnPacket.getSequence()));
                                     for (Session session1 : playerSessions) {
-                                        session1.send(new ClientboundSectionBlocksUpdatePacket(chunkX, blockY / 16, chunkZ, new BlockChangeEntry(Vector3i.from(localX, localY, localZ), 6)));
+                                        session1.send(new ClientboundSectionBlocksUpdatePacket(chunkX, blockY >> 4, chunkZ, new BlockChangeEntry(Vector3i.from(localX, localY, localZ), 6)));
                                     }
 
                                     System.out.println("SectionIndex = " + sectionIndex + ", 新方块应在" + (blockX) + ", " + (blockY) + ", " + (blockZ));
