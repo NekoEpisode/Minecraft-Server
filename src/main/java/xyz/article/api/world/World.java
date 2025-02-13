@@ -2,17 +2,12 @@ package xyz.article.api.world;
 
 import net.kyori.adventure.key.Key;
 import org.cloudburstmc.math.vector.Vector2i;
-import org.cloudburstmc.math.vector.Vector3i;
-import org.geysermc.mcprotocollib.network.Session;
 import org.geysermc.mcprotocollib.protocol.data.game.chunk.ChunkSection;
-import org.geysermc.mcprotocollib.protocol.data.game.level.block.BlockChangeEntry;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundSectionBlocksUpdatePacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import xyz.article.MinecraftServer;
-import xyz.article.api.world.block.BlockPos;
 import xyz.article.api.world.chunk.ChunkData;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -45,9 +40,8 @@ public class World {
             int localY = y & 15;
             int localZ = z & 15;
             chunkSections[sectionIndex].setBlock(localX, localY, localZ, blockID);
-            for (Session session1 : MinecraftServer.playerSessions) {
-                session1.send(new ClientboundSectionBlocksUpdatePacket(chunkX, y >> 4, chunkZ, new BlockChangeEntry(Vector3i.from(localX, localY, localZ), blockID)));
-            }
+            chunk.setChunkSections(chunkSections);
+            chunkDataMap.put(chunk.getChunkPos().pos(), chunk);
         }else {
             log.error("Chunk {}, {} is null!", chunkX, chunkZ);
         }
