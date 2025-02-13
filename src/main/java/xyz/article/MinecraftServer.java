@@ -39,7 +39,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import xyz.article.api.world.World;
 import xyz.article.api.world.WorldManager;
-import xyz.article.api.world.chunk.Chunk;
 import xyz.article.api.world.chunk.ChunkData;
 
 import java.io.File;
@@ -134,6 +133,25 @@ public class MinecraftServer {
                     @Override
                     public void packetReceived(Session session, Packet packet) {
                         if (packet instanceof ServerboundChatPacket chatPacket) {
+                            if (chatPacket.getMessage().startsWith(".setblock")) {
+                                String[] messages = chatPacket.getMessage().split(" ");
+                                if (messages.length < 5) {
+                                    session.send(new ClientboundSystemChatPacket(Component.text("参数不足！").color(NamedTextColor.RED), false));
+                                    return;
+                                }
+                                try {
+                                    overworld.setBlock(
+                                            Integer.parseInt(messages[1]),
+                                            Integer.parseInt(messages[2]),
+                                            Integer.parseInt(messages[3]),
+                                            Integer.parseInt(messages[4])
+                                    );
+                                }catch (NumberFormatException e) {
+                                    session.send(new ClientboundSystemChatPacket(Component.text("请输入数字！").color(NamedTextColor.RED), false));
+                                    return;
+                                }
+                                return;
+                            }
                             GameProfile profile = event.getSession().getFlag(MinecraftConstants.PROFILE_KEY);
                             logger.info("{}: {}", profile.getName(), chatPacket.getMessage());
                             Component msg = Component.text("<" + profile.getName() + "> " + chatPacket.getMessage());
@@ -172,25 +190,20 @@ public class MinecraftServer {
                                     throw new IllegalArgumentException("Unexpected direction: " + useItemOnPacket.getFace());
                             }
 
-                            // 计算新方块的chunk坐标
-                            int chunkX = blockX >> 4;
+                            int chunkX = blockX >> 4; // >> 4 == / 16
                             int chunkZ = blockZ >> 4;
 
-                            // 计算新方块的子区块索引
                             int sectionHeight = 16; // 每个section(子区块)的高度
                             int worldBottom = -64; // 世界底部的Y坐标
                             int sectionIndex = (blockY - worldBottom) / sectionHeight;
 
-                            // 获取chunk数据
                             ChunkData chunkData = overworld.getChunkDataMap().get(Vector2i.from(chunkX, chunkZ));
                             if (chunkData != null) {
                                 ChunkSection[] chunkSections = chunkData.getChunkSections();
 
-                                // 确保子区块索引在有效范围内
                                 if (sectionIndex >= 0 && sectionIndex < chunkSections.length) {
-                                    // 计算区块内的相对坐标
-                                    int localX = blockX & 15;
-                                    int localY = blockY & 15;
+                                    int localX = blockX & 15; // & 15 == % 16
+                                    int localY = blockY - (sectionIndex * sectionHeight + worldBottom);
                                     int localZ = blockZ & 15;
 
                                     // 设置新方块
@@ -203,7 +216,7 @@ public class MinecraftServer {
                                         session1.send(new ClientboundSectionBlocksUpdatePacket(chunkX, blockY >> 4, chunkZ, new BlockChangeEntry(Vector3i.from(localX, localY, localZ), 6)));
                                     }
 
-                                    System.out.println("SectionIndex = " + sectionIndex + ", 新方块应在" + (blockX) + ", " + (blockY) + ", " + (blockZ));
+                                    System.out.println("SectionIndex = " + sectionIndex + ", 新方块坐标" + localX + ", " + localY + ", " + localZ);
                                 } else {
                                     logger.error("Invalid section index: {}", sectionIndex);
                                 }

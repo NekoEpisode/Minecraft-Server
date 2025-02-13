@@ -22,8 +22,8 @@ public class Player {
     }
 
     public void teleportTo(Location location) {
-        this.inWorld = location.getWorld();
-        session.send(new ClientboundPlayerPositionPacket(location.getPos().getX(), location.getPos().getY(), location.getPos().getZ(), 0, 0, 0));
+        this.inWorld = location.world();
+        session.send(new ClientboundPlayerPositionPacket(location.pos().getX(), location.pos().getY(), location.pos().getZ(), 0, 0, 0));
     }
 
     public World getWorld() {

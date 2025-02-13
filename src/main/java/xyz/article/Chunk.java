@@ -1,4 +1,4 @@
-package xyz.article.api.world.chunk;
+package xyz.article;
 
 import org.cloudburstmc.math.vector.Vector2i;
 import org.geysermc.mcprotocollib.protocol.data.game.chunk.BitStorage;
@@ -8,7 +8,9 @@ import org.geysermc.mcprotocollib.protocol.data.game.chunk.palette.GlobalPalette
 import org.geysermc.mcprotocollib.protocol.data.game.chunk.palette.PaletteType;
 import org.geysermc.mcprotocollib.protocol.data.game.level.LightUpdateData;
 import org.geysermc.mcprotocollib.protocol.data.game.level.block.BlockEntityInfo;
-import xyz.article.MinecraftServer;
+import xyz.article.api.world.chunk.ChunkData;
+import xyz.article.api.world.chunk.ChunkPos;
+import xyz.article.api.world.chunk.HeightMap;
 
 import java.util.BitSet;
 import java.util.List;
@@ -37,14 +39,6 @@ public class Chunk {
             for (int z = 0; z < 16; z++) {
                 for (int x = 0; x < 16; x++) {
                     chunkSection.setBlock(x, y, z, 9);
-                }
-            }
-        }
-        ChunkSection chunkSection1 = chunkSections[3];
-        for (int y = 0; y < 16; y++) {
-            for (int z = 0; z < 16; z++) {
-                for (int x = 0; x < 16; x++) {
-                    chunkSection1.setBlock(x, y, z, 9);
                 }
             }
         }

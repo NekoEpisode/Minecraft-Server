@@ -18,7 +18,7 @@ public class Settings {
         ONLINE_MODE = (boolean) readAndCheck("online-mode", true, propertiesFile);
         SERVER_PORT = (int) readAndCheck("server-port", 25565, propertiesFile);
         BIND_ADDRESS = (String) readAndCheck("bind-address", "127.0.0.1", propertiesFile);
-        BIND_ADDRESS = (String) readAndCheck("view-distance", 10, propertiesFile);
+        VIEW_DISTANCE = (int) readAndCheck("view-distance", 10, propertiesFile);
     }
 
     public static Object readAndCheck(String key, Object defaultValue, File propertiesFile) throws IOException {

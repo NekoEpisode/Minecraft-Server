@@ -24,14 +24,14 @@ public class ChunkData {
 
     public ChunkData(ChunkPos chunkPos) {
         for (int i = 0; i < 24; i++) {
-            chunkSections[i] = new ChunkSection(0, DataPalette.createForChunk(), new DataPalette(GlobalPalette.INSTANCE, new BitStorage(16, 16 * 16 * 16), PaletteType.BIOME));
+            chunkSections[i] = new ChunkSection(0, DataPalette.createForChunk(), new DataPalette(GlobalPalette.INSTANCE, new BitStorage(16, 4 * 4 * 4), PaletteType.BIOME));
         }
         this.chunkPos = chunkPos; // 使用Vector2i来表示区块的X和Z坐标。在Minecraft中，Y坐标表示高度，而区块位置仅涉及X和Z。因此，这里Vector2i的getX()对应chunkX，getY()实际表示chunkZ
         blockEntities = new BlockEntityInfo[]{};
         heightMap = new HeightMap();
         lightUpdateData = new LightUpdateData(new BitSet(), new BitSet(), new BitSet(), new BitSet(), List.of(), List.of());
 
-        chunkPos.getWorld().getChunkDataMap().put(chunkPos.getPos(), this);
+        chunkPos.world().getChunkDataMap().put(chunkPos.pos(), this);
     }
     public ChunkData(ChunkPos chunkPos, ChunkSection[] chunkSections, HeightMap heightMap, BlockEntityInfo[] blockEntities, LightUpdateData lightUpdateData) {
         this.chunkSections = chunkSections;
@@ -40,7 +40,7 @@ public class ChunkData {
         this.heightMap = heightMap;
         this.lightUpdateData = lightUpdateData;
 
-        chunkPos.getWorld().getChunkDataMap().put(chunkPos.getPos(), this);
+        chunkPos.world().getChunkDataMap().put(chunkPos.pos(), this);
     }
 
     // Getter/Setters
@@ -87,8 +87,8 @@ public class ChunkData {
             helper.writeChunkSection(byteBuf, chunkSections[i]);
         }
         return new ClientboundLevelChunkWithLightPacket(
-                chunkPos.getPos().getX(),
-                chunkPos.getPos().getY(),
+                chunkPos.pos().getX(),
+                chunkPos.pos().getY(),
                 byteBuf.array(),
                 heightMap.toNbt(),
                 blockEntities,
