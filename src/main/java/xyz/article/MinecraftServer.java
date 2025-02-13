@@ -22,6 +22,7 @@ import org.geysermc.mcprotocollib.protocol.codec.MinecraftCodec;
 import org.geysermc.mcprotocollib.protocol.data.game.chunk.ChunkSection;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.GameMode;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.PlayerSpawnInfo;
+import org.geysermc.mcprotocollib.protocol.data.game.inventory.ContainerType;
 import org.geysermc.mcprotocollib.protocol.data.game.level.block.BlockChangeEntry;
 import org.geysermc.mcprotocollib.protocol.data.status.PlayerInfo;
 import org.geysermc.mcprotocollib.protocol.data.status.ServerStatusInfo;
@@ -40,6 +41,8 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.Serv
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundUseItemOnPacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import xyz.article.api.Slider;
+import xyz.article.api.inventory.Inventory;
 import xyz.article.api.player.Player;
 import xyz.article.api.world.World;
 import xyz.article.api.world.WorldManager;
@@ -109,7 +112,8 @@ public class MinecraftServer {
                     session.send(new ClientboundLoginPacket(0, false, worldNames.toArray(new Key[0]), 0, 16, 16, false, false, false, new PlayerSpawnInfo(0, Key.key("minecraft:overworld"), 100, GameMode.CREATIVE, GameMode.CREATIVE, false, false, null, 100), true));
                     session.send(new ClientboundSetDefaultSpawnPositionPacket(Vector3i.from(0, 1, 0), 0F));
                     logger.info("{} 加入了游戏", profile.getName());
-                    RunningData.playerList.add(new Player(profile, session, GameMode.CREATIVE));
+                    Inventory inventory = new Inventory("Inventory", ContainerType.GENERIC_9X4, 36, 0);
+                    RunningData.playerList.add(new Player(profile, session, GameMode.CREATIVE, inventory));
                     playerSessions.add(session);
                     Component component = Component.text(profile.getName() + " 加入了游戏").color(NamedTextColor.YELLOW);
                     for (Session session1 : playerSessions) {
@@ -167,6 +171,9 @@ public class MinecraftServer {
                                 perlinNoise.generateTerrain(startX, startZ, width, length);
                                 return;
                             }
+                            if (chatPacket.getMessage().startsWith(".open")) {
+                                Slider.getPlayer("Neko110923").openInventory(new Inventory("测试物品栏", ContainerType.GENERIC_9X4, 36, 0));
+                            }
                             GameProfile profile = event.getSession().getFlag(MinecraftConstants.PROFILE_KEY);
                             logger.info("{}: {}", profile.getName(), chatPacket.getMessage());
                             Component msg = Component.text("<" + profile.getName() + "> " + chatPacket.getMessage());
@@ -221,7 +228,7 @@ public class MinecraftServer {
                             if (chunkData != null) {
                                 ChunkSection[] chunkSections = chunkData.getChunkSections();
 
-                                if (sectionIndex >= 0 && sectionIndex < chunkSections.length) {
+                                if (sectionIndex < chunkSections.length) {
                                     int localX = blockX & 15; // & 15 == % 16
                                     int localY = blockY - (sectionIndex * sectionHeight + worldBottom);
                                     int localZ = blockZ & 15;
