@@ -18,16 +18,20 @@ import org.geysermc.mcprotocollib.network.tcp.TcpServer;
 import org.geysermc.mcprotocollib.protocol.MinecraftConstants;
 import org.geysermc.mcprotocollib.protocol.MinecraftProtocol;
 import org.geysermc.mcprotocollib.protocol.codec.MinecraftCodec;
+import org.geysermc.mcprotocollib.protocol.data.game.entity.object.GenericObjectData;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.GameMode;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.PlayerSpawnInfo;
+import org.geysermc.mcprotocollib.protocol.data.game.entity.type.EntityType;
 import org.geysermc.mcprotocollib.protocol.data.game.inventory.ContainerType;
 import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.geysermc.mcprotocollib.protocol.data.status.PlayerInfo;
 import org.geysermc.mcprotocollib.protocol.data.status.ServerStatusInfo;
 import org.geysermc.mcprotocollib.protocol.data.status.VersionInfo;
 import org.geysermc.mcprotocollib.protocol.packet.common.clientbound.ClientboundDisconnectPacket;
+import org.geysermc.mcprotocollib.protocol.packet.common.serverbound.ServerboundKeepAlivePacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundLoginPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundSystemChatPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.spawn.ClientboundAddEntityPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.inventory.ClientboundContainerSetContentPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundSetChunkCacheCenterPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundSetDefaultSpawnPositionPacket;
@@ -43,6 +47,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+import java.util.UUID;
 
 public class MinecraftServer {
     private static final Logger logger = LoggerFactory.getLogger(MinecraftServer.class);
@@ -107,17 +113,18 @@ public class MinecraftServer {
                     session.send(new ClientboundSetDefaultSpawnPositionPacket(Vector3i.from(0, 1, 0), 0F));
 
                     Inventory inventory = new Inventory("Inventory", ContainerType.GENERIC_9X4, 36, 0);
-                    Player player = new Player(profile, session, GameMode.CREATIVE, inventory, overworld);
+                    Player player = new Player(profile, session, new Random().nextInt(), GameMode.CREATIVE, inventory, overworld);
                     RunningData.playerList.add(player);
                     session.send(new ClientboundContainerSetContentPacket(0, 0, new ItemStack[]{new ItemStack(9), new ItemStack(9), new ItemStack(9)}, null));
 
-                    playerSessions.add(session);
-                    playerProfiles.add(profile);
                     logger.info("{} 加入了游戏", profile.getName());
                     Component component = Component.text(profile.getName() + " 加入了游戏").color(NamedTextColor.YELLOW);
                     for (Session session1 : playerSessions) {
                         session1.send(new ClientboundSystemChatPacket(component, false));
+                        session1.send(new ClientboundAddEntityPacket(player.getEntityID(), UUID.randomUUID(), EntityType.PLAYER, 0d, 0d, 1d, 0, 0, 0));
                     }
+                    playerSessions.add(session);
+                    playerProfiles.add(profile);
 
                     session.send(new ClientboundSetChunkCacheCenterPacket(0, 0));
                     for (int x = -4; x < 4; x++) {

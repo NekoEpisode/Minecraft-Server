@@ -7,6 +7,7 @@ import org.geysermc.mcprotocollib.protocol.data.game.chunk.ChunkSection;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.GameMode;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundBlockChangedAckPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundPlayerActionPacket;
+import xyz.article.MinecraftServer;
 import xyz.article.api.Slider;
 import xyz.article.api.interfaces.PacketProcessor;
 import xyz.article.api.player.Player;
@@ -34,7 +35,9 @@ public class PlayerActionPacketProcessor implements PacketProcessor {
                         Vector3i inChunkSectionLocation = Slider.getInChunkSectionLocation(blockPos.pos().getX(), blockPos.pos().getY(), blockPos.pos().getZ(), chunkSectionIndex);
                         targetSection.setBlock(inChunkSectionLocation.getX(), inChunkSectionLocation.getY(), inChunkSectionLocation.getZ(), 0);
                         session.send(new ClientboundBlockChangedAckPacket(actionPacket.getSequence()));
-                        session.send(chunk.getChunkPacket());
+                        for (Session session1 : MinecraftServer.playerSessions) {
+                            session1.send(chunk.getChunkPacket());
+                        }
                     }else {
                         // 计算在生存模式下的挖掘时长，但Slider还是个半成品所以我懒得做
                     }

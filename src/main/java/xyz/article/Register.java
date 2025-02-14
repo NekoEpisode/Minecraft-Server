@@ -1,9 +1,7 @@
 package xyz.article;
 
 import xyz.article.api.interfaces.PacketProcessor;
-import xyz.article.packetProcessors.ChatPacketProcessor;
-import xyz.article.packetProcessors.PlayerActionPacketProcessor;
-import xyz.article.packetProcessors.UseItemOnPacketProcessor;
+import xyz.article.packetProcessors.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,5 +21,7 @@ public class Register {
         registerPacketProcessor(new ChatPacketProcessor());
         registerPacketProcessor(new PlayerActionPacketProcessor());
         registerPacketProcessor(new UseItemOnPacketProcessor());
+        registerPacketProcessor(new MovePlayerPosPacketProcessor());
+        registerPacketProcessor(new MovePlayerPosRotPacketProcessor());
     }
 }

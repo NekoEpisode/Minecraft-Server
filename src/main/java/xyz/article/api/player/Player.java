@@ -14,14 +14,16 @@ import xyz.article.api.world.World;
 public class Player {
     private final GameProfile profile;
     private final Session session;
+    private final int entityID;
 
     private GameMode gameMode;
     private World world;
     private Inventory inventory;
 
-    public Player(GameProfile profile, Session session, GameMode gameMode, Inventory inventory, World world) {
+    public Player(GameProfile profile, Session session, int entityID, GameMode gameMode, Inventory inventory, World world) {
         this.profile = profile;
         this.session = session;
+        this.entityID = entityID;
         this.gameMode = gameMode;
         this.inventory = inventory;
         this.world = world;
@@ -29,6 +31,10 @@ public class Player {
 
     public GameProfile getProfile() {
         return profile;
+    }
+
+    public int getEntityID() {
+        return entityID;
     }
 
     public World getWorld() {
