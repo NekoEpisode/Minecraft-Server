@@ -20,6 +20,9 @@ public class Player {
     private World world;
     private Inventory inventory;
 
+    private final Hand mainHand;
+    private final Hand leftHand;
+
     public Player(GameProfile profile, Session session, int entityID, GameMode gameMode, Inventory inventory, World world) {
         this.profile = profile;
         this.session = session;
@@ -27,6 +30,9 @@ public class Player {
         this.gameMode = gameMode;
         this.inventory = inventory;
         this.world = world;
+
+        this.mainHand = new Hand(0); // 0 == 右手
+        this.leftHand = new Hand(1); // 1 == 左手
     }
 
     public GameProfile getProfile() {
@@ -55,6 +61,14 @@ public class Player {
 
     public void setInventory(Inventory inventory) {
         this.inventory = inventory;
+    }
+
+    public Hand getLeftHand() {
+        return leftHand;
+    }
+
+    public Hand getMainHand() {
+        return mainHand;
     }
 
     public void teleportTo(Location location) {

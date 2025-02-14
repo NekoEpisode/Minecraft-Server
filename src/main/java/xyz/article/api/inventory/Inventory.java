@@ -1,10 +1,8 @@
 package xyz.article.api.inventory;
 
-import net.kyori.adventure.text.Component;
 import org.geysermc.mcprotocollib.protocol.data.game.inventory.ContainerType;
 import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.inventory.ClientboundContainerSetContentPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.inventory.ClientboundOpenScreenPacket;
 import org.geysermc.mcprotocollib.network.Session;
 
 import java.util.ArrayList;
@@ -40,6 +38,10 @@ public class Inventory {
             throw new IllegalArgumentException("Slot out of bounds");
         }
         return items.get(slot);
+    }
+
+    public List<ItemStack> getItems() {
+        return items;
     }
 
     public void sync(Session session) {

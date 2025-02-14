@@ -6,14 +6,19 @@ import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.mcprotocollib.network.Session;
 import org.geysermc.mcprotocollib.network.packet.Packet;
 import org.geysermc.mcprotocollib.protocol.data.game.chunk.ChunkSection;
+import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundSystemChatPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundBlockChangedAckPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundUseItemOnPacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import xyz.article.MinecraftServer;
+import xyz.article.api.Slider;
 import xyz.article.api.interfaces.PacketProcessor;
+import xyz.article.api.world.block.ItemToBlock;
 import xyz.article.api.world.chunk.ChunkData;
+
+import java.util.Objects;
 
 public class UseItemOnPacketProcessor implements PacketProcessor {
     private static final Logger log = LoggerFactory.getLogger(UseItemOnPacketProcessor.class);
@@ -72,8 +77,17 @@ public class UseItemOnPacketProcessor implements PacketProcessor {
                     int localZ = blockZ & 15;
 
                     // 设置新方块
-                    chunkSections[sectionIndex].setBlock(localX, localY, localZ, 1);
-                    MinecraftServer.overworld.getChunkDataMap().get(Vector2i.from(chunkX, chunkZ)).setChunkSections(chunkSections);
+                    int id = 0;
+                    ItemStack item = Objects.requireNonNull(Slider.getPlayer(session)).getMainHand().getCurrentItem();
+                    if (item != null) {
+                        id = item.getId();
+                    }
+                    int blockID = ItemToBlock.getBlockID(id);
+                    if (blockID == 0) {
+                        session.send(new ClientboundBlockChangedAckPacket(useItemOnPacket.getSequence()));
+                        return;
+                    }
+                    chunkSections[sectionIndex].setBlock(localX, localY, localZ, blockID);
 
                     // 发送区块更新包
                     session.send(new ClientboundBlockChangedAckPacket(useItemOnPacket.getSequence()));

@@ -54,7 +54,7 @@ public class ChatPacketProcessor implements PacketProcessor {
                 return;
             }
             if (chatPacket.getMessage().startsWith(".open")) {
-                Objects.requireNonNull(Slider.getPlayer("Neko110923")).openInventory(new Inventory("测试物品栏", ContainerType.GENERIC_9X4, 36, 0));
+                Objects.requireNonNull(Slider.getPlayer("Neko110923")).openInventory(Objects.requireNonNull(Slider.getPlayer("Neko110923")).getInventory());
                 return;
             }
             if (chatPacket.getMessage().startsWith(".closeServer")) {
