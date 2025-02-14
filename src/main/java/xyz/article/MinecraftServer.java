@@ -35,6 +35,7 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.spaw
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.inventory.ClientboundContainerSetContentPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundSetChunkCacheCenterPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundSetDefaultSpawnPositionPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.ServerboundSetCreativeModeSlotPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundMovePlayerPosPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundMovePlayerPosRotPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundMovePlayerRotPacket;
@@ -45,6 +46,7 @@ import xyz.article.api.inventory.Inventory;
 import xyz.article.api.player.Player;
 import xyz.article.api.world.World;
 import xyz.article.api.world.WorldManager;
+import xyz.article.api.world.block.ItemToBlock;
 
 import java.io.File;
 import java.io.IOException;
@@ -69,6 +71,7 @@ public class MinecraftServer {
 
         Settings.init(propertiesFile);
         Register.registerALL();
+        ItemToBlock.writeMap();
 
         SessionService sessionService = new SessionService();
         sessionService.setProxy(AUTH_PROXY);
@@ -115,7 +118,7 @@ public class MinecraftServer {
                     session.send(new ClientboundLoginPacket(0, false, worldNames.toArray(new Key[0]), 0, 16, 16, false, false, false, new PlayerSpawnInfo(0, Key.key("minecraft:overworld"), 100, GameMode.CREATIVE, GameMode.CREATIVE, false, false, null, 100), true));
                     session.send(new ClientboundSetDefaultSpawnPositionPacket(Vector3i.from(0, 1, 0), 0F));
 
-                    Inventory inventory = new Inventory(profile.getName() + "'s Inventory", ContainerType.GENERIC_9X4, 36, 0); // 为此玩家新生成一个物品栏
+                    Inventory inventory = new Inventory(profile.getName() + "'s Inventory", ContainerType.GENERIC_9X5, 45, new Random().nextInt()); // 为此玩家新生成一个物品栏
                     Player player = new Player(profile, session, new Random().nextInt(), GameMode.CREATIVE, inventory, overworld);
                     RunningData.playerList.add(player);
                     session.send(new ClientboundContainerSetContentPacket(0, 0, new ItemStack[]{new ItemStack(9), new ItemStack(9), new ItemStack(9)}, null));
@@ -145,7 +148,7 @@ public class MinecraftServer {
                 for (Session session : playerSessions) {
                     session.send(new ClientboundDisconnectPacket(Component.text("服务器正在关闭...")));
                 }
-                playerSessions.clear();
+                playerSessions.clear();//awa
                 playerProfiles.clear();
                 RunningData.playerList.clear();
                 WorldManager.worldMap.forEach((key, world) -> world.save());
@@ -158,9 +161,9 @@ public class MinecraftServer {
                 event.getSession().addListener(new SessionAdapter() {
                     @Override
                     public void packetReceived(Session session, Packet packet) {
-                        if (!(packet instanceof ServerboundKeepAlivePacket || packet instanceof ServerboundMovePlayerPosPacket || packet instanceof ServerboundMovePlayerPosRotPacket || packet instanceof ServerboundMovePlayerRotPacket)) {
+                        /*if (!(packet instanceof ServerboundKeepAlivePacket || packet instanceof ServerboundMovePlayerPosPacket || packet instanceof ServerboundMovePlayerPosRotPacket || packet instanceof ServerboundMovePlayerRotPacket)) {
                             logger.info(packet.toString());
-                        }
+                        }*/
 
                         // 交给处理器去处理
                         for (PacketProcessor processor : Register.getPacketProcessors()) {

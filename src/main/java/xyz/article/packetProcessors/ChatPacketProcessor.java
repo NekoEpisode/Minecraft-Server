@@ -18,6 +18,7 @@ import xyz.article.api.interfaces.PacketProcessor;
 import xyz.article.api.inventory.Inventory;
 
 import java.util.Objects;
+import java.util.Random;
 
 public class ChatPacketProcessor implements PacketProcessor {
     private static final Logger log = LoggerFactory.getLogger(ChatPacketProcessor.class);
@@ -54,7 +55,7 @@ public class ChatPacketProcessor implements PacketProcessor {
                 return;
             }
             if (chatPacket.getMessage().startsWith(".open")) {
-                Objects.requireNonNull(Slider.getPlayer("Neko110923")).openInventory(Objects.requireNonNull(Slider.getPlayer("Neko110923")).getInventory());
+                Objects.requireNonNull(Slider.getPlayer("Neko110923")).openInventory(new Inventory("Inventory", ContainerType.GENERIC_9X5, 45, 0));
                 return;
             }
             if (chatPacket.getMessage().startsWith(".closeServer")) {

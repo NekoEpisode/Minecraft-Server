@@ -1,6 +1,7 @@
 package xyz.article.packetProcessors;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.cloudburstmc.math.vector.Vector2i;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.mcprotocollib.network.Session;
@@ -85,6 +86,7 @@ public class UseItemOnPacketProcessor implements PacketProcessor {
                     int blockID = ItemToBlock.getBlockID(id);
                     if (blockID == 0) {
                         session.send(new ClientboundBlockChangedAckPacket(useItemOnPacket.getSequence()));
+                        session.send(new ClientboundSystemChatPacket(Component.text("没有获取到你手中方块物品对应的方块！").color(NamedTextColor.RED), false));
                         return;
                     }
                     chunkSections[sectionIndex].setBlock(localX, localY, localZ, blockID);

@@ -17,9 +17,9 @@ public class SetCarriedItemPacketProcessor implements PacketProcessor {
             Player player = Slider.getPlayer(session);
             if (player != null) {
                 Inventory inventory = player.getInventory();
-                ItemStack item = inventory.getItem(slot + 27);
+                ItemStack item = inventory.getItem(slot + 36);
                 player.getMainHand().setCurrentItem(item);
-                System.out.println(player.getMainHand().getCurrentItem());
+                player.getMainHand().setCurrentSlot(slot);
             }
         }
     }
