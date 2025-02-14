@@ -73,7 +73,6 @@ public class UseItemOnPacketProcessor implements PacketProcessor {
 
                     // 设置新方块
                     chunkSections[sectionIndex].setBlock(localX, localY, localZ, 1);
-                    MinecraftServer.overworld.getChunkDataMap().get(Vector2i.from(chunkX, chunkZ)).setChunkSections(chunkSections);
 
                     // 发送区块更新包
                     session.send(new ClientboundBlockChangedAckPacket(useItemOnPacket.getSequence()));

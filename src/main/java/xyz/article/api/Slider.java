@@ -1,6 +1,7 @@
 package xyz.article.api;
 
 import org.cloudburstmc.math.vector.Vector2i;
+import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.mcprotocollib.network.Session;
 import xyz.article.RunningData;
 import xyz.article.api.player.Player;
@@ -54,5 +55,27 @@ public class Slider {
         int chunkX = blockPos.pos().getX() >> 4;
         int chunkZ = blockPos.pos().getZ() >> 4;
         return new ChunkPos(blockPos.world(), Vector2i.from(chunkX, chunkZ));
+    }
+
+    public static int getChunkSectionIndex(int y) {
+        int sectionHeight = 16;
+        int worldBottom = -64;
+        return (y - worldBottom) / sectionHeight;
+    }
+
+    public static Vector3i getInChunkLocation(int x, int y, int z){
+        x = x & 15;
+        y = y & 15;
+        z = z & 15;
+        return Vector3i.from(x, y, z);
+    }
+
+    public static Vector3i getInChunkSectionLocation(int x, int y, int z, int sectionIndex) {
+        int sectionHeight = 16;
+        int worldBottom = -64;
+        int x1 = x & 15;
+        int y1 = y - (sectionIndex * sectionHeight + worldBottom);
+        int z1 = z & 15;
+        return Vector3i.from(x1, y1, z1);
     }
 }
