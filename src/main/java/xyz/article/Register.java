@@ -1,8 +1,6 @@
 package xyz.article;
 
 import xyz.article.api.interfaces.PacketProcessor;
-import org.geysermc.mcprotocollib.network.Session;
-import org.geysermc.mcprotocollib.network.packet.Packet;
 import xyz.article.packetProcessors.ChatPacketProcessor;
 import xyz.article.packetProcessors.PlayerActionPacketProcessor;
 import xyz.article.packetProcessors.UseItemOnPacketProcessor;
