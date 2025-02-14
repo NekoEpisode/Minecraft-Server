@@ -49,7 +49,7 @@ public class MinecraftServer {
     private static final ProxyInfo AUTH_PROXY = null;
     public static final List<Session> playerSessions = new ArrayList<>();
     private static final List<GameProfile> playerProfiles = new ArrayList<>();
-    protected static TcpServer server;
+    private static TcpServer server;
     public static World overworld;
 
     public static void main(String[] args) throws IOException {
@@ -81,6 +81,7 @@ public class MinecraftServer {
         );
 
         server.setGlobalFlag(MinecraftConstants.SERVER_LOGIN_HANDLER_KEY, session -> {
+                    // 检查玩家是否可以加入游戏
                     if ((playerSessions.size() + 1) > Settings.MAX_PLAYERS) {
                         session.send(new ClientboundDisconnectPacket("这个服务器没有地方容纳你了！"));
                         return;
@@ -98,21 +99,25 @@ public class MinecraftServer {
                         return;
                     }
 
+                    // 发送所有登录数据包
                     ProtocolSender.sendBrand("SliderMC", session);
                     List<Key> worldNames = new ArrayList<>();
                     WorldManager.worldMap.forEach((key, world) -> worldNames.add(key));
                     session.send(new ClientboundLoginPacket(0, false, worldNames.toArray(new Key[0]), 0, 16, 16, false, false, false, new PlayerSpawnInfo(0, Key.key("minecraft:overworld"), 100, GameMode.CREATIVE, GameMode.CREATIVE, false, false, null, 100), true));
                     session.send(new ClientboundSetDefaultSpawnPositionPacket(Vector3i.from(0, 1, 0), 0F));
-                    logger.info("{} 加入了游戏", profile.getName());
+
                     Inventory inventory = new Inventory("Inventory", ContainerType.GENERIC_9X4, 36, 0);
-                    RunningData.playerList.add(new Player(profile, session, GameMode.CREATIVE, inventory));
+                    Player player = new Player(profile, session, GameMode.CREATIVE, inventory, overworld);
+                    RunningData.playerList.add(player);
                     session.send(new ClientboundContainerSetContentPacket(0, 0, new ItemStack[]{new ItemStack(9), new ItemStack(9), new ItemStack(9)}, null));
+
                     playerSessions.add(session);
+                    playerProfiles.add(profile);
+                    logger.info("{} 加入了游戏", profile.getName());
                     Component component = Component.text(profile.getName() + " 加入了游戏").color(NamedTextColor.YELLOW);
                     for (Session session1 : playerSessions) {
                         session1.send(new ClientboundSystemChatPacket(component, false));
                     }
-                    playerProfiles.add(profile);
 
                     session.send(new ClientboundSetChunkCacheCenterPacket(0, 0));
                     for (int x = -4; x < 4; x++) {
@@ -127,6 +132,14 @@ public class MinecraftServer {
         server.addListener(new ServerAdapter() {
             @Override
             public void serverClosed(ServerClosedEvent event) {
+                for (Session session : playerSessions) {
+                    session.send(new ClientboundDisconnectPacket(Component.text("服务器正在关闭...")));
+                }
+                playerSessions.clear();
+                playerProfiles.clear();
+                RunningData.playerList.clear();
+                WorldManager.worldMap.forEach((key, world) -> world.save());
+
                 logger.info("服务器已关闭");
             }
 
@@ -135,6 +148,7 @@ public class MinecraftServer {
                 event.getSession().addListener(new SessionAdapter() {
                     @Override
                     public void packetReceived(Session session, Packet packet) {
+                        // 交给处理器去处理
                         for (PacketProcessor processor : Register.getPacketProcessors()) {
                             processor.process(packet, session);
                         }
@@ -159,5 +173,9 @@ public class MinecraftServer {
 
         server.bind();
         logger.info("服务器已在 {}:{} 启动", Settings.BIND_ADDRESS, Settings.SERVER_PORT);
+    }
+
+    public static TcpServer getServer() {
+        return server;
     }
 }

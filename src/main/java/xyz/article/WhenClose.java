@@ -8,7 +8,8 @@ public class WhenClose {
 
     public WhenClose() {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            MinecraftServer.server.close();
+            log.info("正在关闭服务器");
+            MinecraftServer.getServer().close();
         }));
     }
 }

@@ -51,4 +51,8 @@ public class World {
             log.error("Chunk {}, {} is null!", chunkX, chunkZ);
         }
     }
+
+    public void save() {
+        log.info("正在保存世界 {}", key);
+    }
 }

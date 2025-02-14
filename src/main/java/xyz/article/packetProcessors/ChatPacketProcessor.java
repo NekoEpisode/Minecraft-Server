@@ -55,6 +55,11 @@ public class ChatPacketProcessor implements PacketProcessor {
             }
             if (chatPacket.getMessage().startsWith(".open")) {
                 Objects.requireNonNull(Slider.getPlayer("Neko110923")).openInventory(new Inventory("测试物品栏", ContainerType.GENERIC_9X4, 36, 0));
+                return;
+            }
+            if (chatPacket.getMessage().startsWith(".closeServer")) {
+                MinecraftServer.getServer().close();
+                return;
             }
             GameProfile profile = session.getFlag(MinecraftConstants.PROFILE_KEY);
             log.info("{}: {}", profile.getName(), chatPacket.getMessage());

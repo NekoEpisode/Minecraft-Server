@@ -19,11 +19,12 @@ public class Player {
     private World world;
     private Inventory inventory;
 
-    public Player(GameProfile profile, Session session, GameMode gameMode, Inventory inventory) {
+    public Player(GameProfile profile, Session session, GameMode gameMode, Inventory inventory, World world) {
         this.profile = profile;
         this.session = session;
         this.gameMode = gameMode;
         this.inventory = inventory;
+        this.world = world;
     }
 
     public GameProfile getProfile() {
