@@ -127,8 +127,8 @@ public class MinecraftServer {
                     playerProfiles.add(profile);
 
                     session.send(new ClientboundSetChunkCacheCenterPacket(0, 0));
-                    for (int x = -4; x < 4; x++) {
-                        for (int z = -4; z < 4; z++) {
+                    for (int x = -6; x < 6; x++) {
+                        for (int z = -6; z < 6; z++) {
                             session.send(Chunk.createSimpleGrassChunk(x, z).getChunkPacket());
                         }
                     }

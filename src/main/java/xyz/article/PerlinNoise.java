@@ -11,7 +11,7 @@ public class PerlinNoise {
 
     private static final int OCTAVES = 4; // 噪声层数，控制地形的细节
     private static final double PERSISTENCE = 0.5; // 持久度，控制每层噪声的影响
-    private static final double SCALE = 0.05; // 缩放比例，控制地形的平滑度
+    public static final double SCALE = 0.05; // 缩放比例，控制地形的平滑度
 
     private final int[] permutations; // 排列数组，用于噪声计算
 
@@ -127,7 +127,7 @@ public class PerlinNoise {
                     frequency *= 2;
                 }
                 // 将噪声值映射到地形高度
-                int height = (int) (noiseValue * 10 + 0); // 64 是基础高度
+                int height = (int) (noiseValue * 10 + 0);
                 // 设置方块
                 for (int y = 0; y < height; y++) {
                     MinecraftServer.overworld.setBlock(startX + x, y, startZ + z, y == height - 1 ? 9 : 1); // 2 是草方块，1 是石头
