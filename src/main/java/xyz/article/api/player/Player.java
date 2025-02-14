@@ -19,10 +19,10 @@ public class Player {
     private World world;
     private Inventory inventory;
 
-    public Player(GameProfile profile, Session session, GameMode currGameMode, Inventory inventory) {
+    public Player(GameProfile profile, Session session, GameMode gameMode, Inventory inventory) {
         this.profile = profile;
         this.session = session;
-        this.gameMode = currGameMode;
+        this.gameMode = gameMode;
         this.inventory = inventory;
     }
 
@@ -53,6 +53,10 @@ public class Player {
     public void teleportTo(Location location) {
         this.world = location.world();
         session.send(new ClientboundPlayerPositionPacket(location.pos().getX(), location.pos().getY(), location.pos().getZ(), 0, 0, 0));
+    }
+
+    public Session getSession() {
+        return session;
     }
 
     public void openInventory(Inventory inventory) {

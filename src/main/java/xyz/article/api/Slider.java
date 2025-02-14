@@ -1,9 +1,13 @@
 package xyz.article.api;
 
+import org.cloudburstmc.math.vector.Vector2i;
+import org.geysermc.mcprotocollib.network.Session;
 import xyz.article.RunningData;
 import xyz.article.api.player.Player;
 import xyz.article.api.world.World;
 import xyz.article.api.world.WorldManager;
+import xyz.article.api.world.block.BlockPos;
+import xyz.article.api.world.chunk.ChunkPos;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,5 +35,24 @@ public class Slider {
             }
         }
         return null;
+    }
+    public static Player getPlayer(Session session) {
+        for (Player player : RunningData.playerList) {
+            if (player.getSession().equals(session)) {
+                return player;
+            }
+        }
+        return null;
+    }
+
+    public static ChunkPos getChunkPos(int x, int z, World world) {
+        int chunkX = x >> 4;
+        int chunkZ = z >> 4;
+        return new ChunkPos(world, Vector2i.from(chunkX, chunkZ));
+    }
+    public static ChunkPos getChunkPos(BlockPos blockPos) {
+        int chunkX = blockPos.pos().getX() >> 4;
+        int chunkZ = blockPos.pos().getZ() >> 4;
+        return new ChunkPos(blockPos.world(), Vector2i.from(chunkX, chunkZ));
     }
 }

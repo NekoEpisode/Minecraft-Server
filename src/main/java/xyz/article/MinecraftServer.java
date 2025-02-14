@@ -3,7 +3,6 @@ package xyz.article;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.cloudburstmc.math.vector.Vector2i;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.mcprotocollib.auth.GameProfile;
 import org.geysermc.mcprotocollib.auth.SessionService;
@@ -19,34 +18,26 @@ import org.geysermc.mcprotocollib.network.tcp.TcpServer;
 import org.geysermc.mcprotocollib.protocol.MinecraftConstants;
 import org.geysermc.mcprotocollib.protocol.MinecraftProtocol;
 import org.geysermc.mcprotocollib.protocol.codec.MinecraftCodec;
-import org.geysermc.mcprotocollib.protocol.data.game.chunk.ChunkSection;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.GameMode;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.PlayerSpawnInfo;
 import org.geysermc.mcprotocollib.protocol.data.game.inventory.ContainerType;
-import org.geysermc.mcprotocollib.protocol.data.game.level.block.BlockChangeEntry;
+import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.geysermc.mcprotocollib.protocol.data.status.PlayerInfo;
 import org.geysermc.mcprotocollib.protocol.data.status.ServerStatusInfo;
 import org.geysermc.mcprotocollib.protocol.data.status.VersionInfo;
 import org.geysermc.mcprotocollib.protocol.packet.common.clientbound.ClientboundDisconnectPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundLoginPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundSystemChatPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundBlockChangedAckPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundSectionBlocksUpdatePacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.inventory.ClientboundContainerSetContentPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundSetChunkCacheCenterPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundSetDefaultSpawnPositionPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.border.ClientboundInitializeBorderPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.ServerboundChatPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundPlayerActionPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundSetCarriedItemPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundUseItemOnPacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import xyz.article.api.Slider;
+import xyz.article.api.interfaces.PacketProcessor;
 import xyz.article.api.inventory.Inventory;
 import xyz.article.api.player.Player;
 import xyz.article.api.world.World;
 import xyz.article.api.world.WorldManager;
-import xyz.article.api.world.chunk.ChunkData;
 
 import java.io.File;
 import java.io.IOException;
@@ -63,11 +54,12 @@ public class MinecraftServer {
 
     public static void main(String[] args) throws IOException {
         new WhenClose();
-        Thread.currentThread().setName("Server Thread");
+        Thread.currentThread().setName("Main Thread");
         File propertiesFile = new File("./settings.yml");
         if (propertiesFile.createNewFile()) logger.info("已创建所需文件");
 
         Settings.init(propertiesFile);
+        Register.registerALL();
 
         SessionService sessionService = new SessionService();
         sessionService.setProxy(AUTH_PROXY);
@@ -114,6 +106,7 @@ public class MinecraftServer {
                     logger.info("{} 加入了游戏", profile.getName());
                     Inventory inventory = new Inventory("Inventory", ContainerType.GENERIC_9X4, 36, 0);
                     RunningData.playerList.add(new Player(profile, session, GameMode.CREATIVE, inventory));
+                    session.send(new ClientboundContainerSetContentPacket(0, 0, new ItemStack[]{new ItemStack(9), new ItemStack(9), new ItemStack(9)}, null));
                     playerSessions.add(session);
                     Component component = Component.text(profile.getName() + " 加入了游戏").color(NamedTextColor.YELLOW);
                     for (Session session1 : playerSessions) {
@@ -142,114 +135,8 @@ public class MinecraftServer {
                 event.getSession().addListener(new SessionAdapter() {
                     @Override
                     public void packetReceived(Session session, Packet packet) {
-                        if (packet instanceof ServerboundChatPacket chatPacket) {
-                            if (chatPacket.getMessage().startsWith(".setblock")) {
-                                String[] messages = chatPacket.getMessage().split(" ");
-                                if (messages.length < 5) {
-                                    session.send(new ClientboundSystemChatPacket(Component.text("参数不足！").color(NamedTextColor.RED), false));
-                                    return;
-                                }
-                                try {
-                                    overworld.setBlock(
-                                            Integer.parseInt(messages[1]),
-                                            Integer.parseInt(messages[2]),
-                                            Integer.parseInt(messages[3]),
-                                            Integer.parseInt(messages[4])
-                                    );
-                                }catch (NumberFormatException e) {
-                                    session.send(new ClientboundSystemChatPacket(Component.text("参数不足！").color(NamedTextColor.RED), false));
-                                    return;
-                                }
-                                return;
-                            }
-                            if (chatPacket.getMessage().startsWith(".gen")) {
-                                PerlinNoise perlinNoise = new PerlinNoise(12345L);
-                                int startX = 0;
-                                int startZ = 0;
-                                int width = 22;
-                                int length = 22;
-                                perlinNoise.generateTerrain(startX, startZ, width, length);
-                                return;
-                            }
-                            if (chatPacket.getMessage().startsWith(".open")) {
-                                Slider.getPlayer("Neko110923").openInventory(new Inventory("测试物品栏", ContainerType.GENERIC_9X4, 36, 0));
-                            }
-                            GameProfile profile = event.getSession().getFlag(MinecraftConstants.PROFILE_KEY);
-                            logger.info("{}: {}", profile.getName(), chatPacket.getMessage());
-                            Component msg = Component.text("<" + profile.getName() + "> " + chatPacket.getMessage());
-                            for (Session session1 : playerSessions) {
-                                session1.send(new ClientboundSystemChatPacket(msg, false));
-                            }
-                        } else if (packet instanceof ServerboundPlayerActionPacket actionPacket) {
-
-                        } else if (packet instanceof ServerboundUseItemOnPacket useItemOnPacket) {
-                            Vector3i blockPos = useItemOnPacket.getPosition();
-                            int blockX = blockPos.getX();
-                            int blockY = blockPos.getY();
-                            int blockZ = blockPos.getZ();
-                            if (blockY < -63 || blockY > 319) {
-                                session.send(new ClientboundBlockChangedAckPacket(useItemOnPacket.getSequence()));
-                                session.send(new ClientboundSystemChatPacket(Component.text("超出世界y坐标限制"), false));
-                                return;
-                            }
-
-                            // 根据玩家点击的面对坐标进行修正
-                            switch (useItemOnPacket.getFace()) {
-                                case UP:
-                                    blockY++;
-                                    break;
-                                case DOWN:
-                                    blockY--;
-                                    break;
-                                case NORTH:
-                                    blockZ--;
-                                    break;
-                                case SOUTH:
-                                    blockZ++;
-                                    break;
-                                case WEST:
-                                    blockX--;
-                                    break;
-                                case EAST:
-                                    blockX++;
-                                    break;
-                                default:
-                                    throw new IllegalArgumentException("Unexpected direction: " + useItemOnPacket.getFace());
-                            }
-
-                            int chunkX = blockX >> 4; // >> 4 == / 16
-                            int chunkZ = blockZ >> 4;
-
-                            int sectionHeight = 16; // 每个section(子区块)的高度
-                            int worldBottom = -64; // 世界底部的Y坐标
-                            int sectionIndex = (blockY - worldBottom) / sectionHeight;
-
-                            ChunkData chunkData = overworld.getChunkDataMap().get(Vector2i.from(chunkX, chunkZ));
-                            if (chunkData != null) {
-                                ChunkSection[] chunkSections = chunkData.getChunkSections();
-
-                                if (sectionIndex < chunkSections.length) {
-                                    int localX = blockX & 15; // & 15 == % 16
-                                    int localY = blockY - (sectionIndex * sectionHeight + worldBottom);
-                                    int localZ = blockZ & 15;
-
-                                    // 设置新方块
-                                    chunkSections[sectionIndex].setBlock(localX, localY, localZ, 1);
-                                    overworld.getChunkDataMap().get(Vector2i.from(chunkX, chunkZ)).setChunkSections(chunkSections);
-
-                                    // 发送区块更新包
-                                    session.send(new ClientboundBlockChangedAckPacket(useItemOnPacket.getSequence()));
-                                    for (Session session1 : playerSessions) {
-                                        session1.send(chunkData.getChunkPacket());
-                                    }
-
-                                    System.out.println("SectionIndex = " + sectionIndex + ", 新方块坐标" + localX + ", " + localY + ", " + localZ);
-                                } else {
-                                    logger.error("Invalid section index: {}", sectionIndex);
-                                }
-                            } else {
-                                logger.error("Chunk Data (x{}, z{}) is null!", chunkX, chunkZ);
-                            }
+                        for (PacketProcessor processor : Register.getPacketProcessors()) {
+                            processor.process(packet, session);
                         }
                     }
                 });

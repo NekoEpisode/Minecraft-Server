@@ -7,16 +7,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import xyz.article.api.world.chunk.ChunkData;
 
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class World {
     private static final Logger log = LoggerFactory.getLogger(World.class);
     private Map<Vector2i, ChunkData> chunkDataMap = new ConcurrentHashMap<>();
+    private final Key key;
 
     public World(Key key) {
         WorldManager.worldMap.put(key, this);
+        this.key = key;
     }
 
     public void setChunkMap(Map<Vector2i, ChunkData> chunkDataMap) {
@@ -25,6 +26,10 @@ public class World {
 
     public Map<Vector2i, ChunkData> getChunkDataMap() {
         return chunkDataMap;
+    }
+
+    public Key getKey() {
+        return key;
     }
 
     public void setBlock(int x, int y, int z, int blockID) {
