@@ -14,6 +14,7 @@ import org.geysermc.mcprotocollib.protocol.data.game.inventory.ContainerType;
 import org.geysermc.mcprotocollib.protocol.data.game.level.notify.GameEvent;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundPlayerChatPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundSystemChatPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundPlayerPositionPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundGameEventPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.ServerboundChatPacket;
 import org.slf4j.Logger;
@@ -27,6 +28,7 @@ import xyz.article.api.interfaces.PacketProcessor;
 import xyz.article.api.inventory.Inventory;
 
 import java.util.Objects;
+import java.util.Random;
 
 public class ChatPacketProcessor implements PacketProcessor {
     private static final Logger log = LoggerFactory.getLogger(ChatPacketProcessor.class);
@@ -53,15 +55,6 @@ public class ChatPacketProcessor implements PacketProcessor {
                 }
                 return;
             }
-            if (chatPacket.getMessage().startsWith(".gen")) {
-                PerlinNoise perlinNoise = new PerlinNoise(12345L);
-                int startX = 0;
-                int startZ = 0;
-                int width = 22;
-                int length = 22;
-                perlinNoise.generateTerrain(startX, startZ, width, length);
-                return;
-            }
             if (chatPacket.getMessage().startsWith(".open")) {
                 String[] strings = chatPacket.getMessage().split(" ");
                 if (strings.length < 2) {
@@ -75,6 +68,10 @@ public class ChatPacketProcessor implements PacketProcessor {
             }
             if (chatPacket.getMessage().startsWith(".closeServer")) {
                 MinecraftServer.getServer().close();
+                return;
+            }
+            if (chatPacket.getMessage().startsWith(".tp")) {
+                session.send(new ClientboundPlayerPositionPacket(0, 330, 0, 0, 0, new Random().nextInt()));
                 return;
             }
             if (chatPacket.getMessage().startsWith(".gamemode")) {

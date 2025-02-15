@@ -4,10 +4,7 @@ import io.netty.handler.codec.base64.Base64Decoder;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.cloudburstmc.math.vector.Vector2d;
-import org.cloudburstmc.math.vector.Vector2f;
-import org.cloudburstmc.math.vector.Vector3d;
-import org.cloudburstmc.math.vector.Vector3i;
+import org.cloudburstmc.math.vector.*;
 import org.geysermc.mcprotocollib.auth.GameProfile;
 import org.geysermc.mcprotocollib.auth.SessionService;
 import org.geysermc.mcprotocollib.network.ProxyInfo;
@@ -62,6 +59,8 @@ import xyz.article.api.entity.player.Player;
 import xyz.article.api.world.World;
 import xyz.article.api.world.WorldManager;
 import xyz.article.api.world.block.ItemToBlock;
+import xyz.article.api.world.chunk.ChunkData;
+import xyz.article.api.world.chunk.ChunkPos;
 
 import java.io.File;
 import java.io.IOException;
@@ -74,6 +73,7 @@ public class MinecraftServer {
     private static final List<GameProfile> playerProfiles = new ArrayList<>();
     private static TcpServer server;
     public static World overworld;
+    private final static Map<ChunkPos, ChunkData> cache = new HashMap<>();
 
     public static void main(String[] args) throws IOException {
         new WhenClose();
@@ -149,11 +149,38 @@ public class MinecraftServer {
                     playerProfiles.add(profile);
 
                     session.send(new ClientboundSetChunkCacheCenterPacket(0, 0));
-                    for (int x = -6; x < 6; x++) {
-                        for (int z = -6; z < 6; z++) {
-                            session.send(Chunk.createSimpleGrassChunk(x, z).getChunkPacket());
+                    PerlinNoise noise = new PerlinNoise(12345L);
+                    int centerX = 8; // 中心点的X坐标
+                    int centerY = 8; // 中心点的Y坐标
+                    int radius = 5; // 半径，表示从中心点向外的区块数量
+
+                    int startX = centerX - radius;
+                    int endX = centerX + radius;
+                    int startZ = centerY - radius;
+                    int endZ = centerY + radius;
+
+                    int width = endX - startX + 1;
+                    int length = endZ - startZ + 1;
+                    ChunkData[][] data = noise.generateTerrain(width, length);
+
+                    for (int i = 0; i < width; i++) {
+                        for (int l = 0; l < length; l++) {
+                            // 计算实际的区块坐标
+                            int chunkX = startX + i;
+                            int chunkZ = startZ + l;
+                            ChunkPos chunkPos = new ChunkPos(overworld, Vector2i.from(chunkX, chunkZ));
+
+                            if (cache.get(chunkPos) == null) {
+                                ChunkData chunkData = data[i][l];
+                                cache.put(chunkPos, chunkData);
+                                session.send(chunkData.getChunkPacket());
+                            } else {
+                                ChunkData chunkData1 = cache.get(chunkPos);
+                                session.send(chunkData1.getChunkPacket());
+                            }
                         }
                     }
+
                     session.send(new ClientboundSetDefaultSpawnPositionPacket(Vector3i.from(8.5, 65, 8.5), 0F));
                 }
         );

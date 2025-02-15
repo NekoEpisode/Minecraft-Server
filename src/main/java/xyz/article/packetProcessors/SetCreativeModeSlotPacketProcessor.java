@@ -16,6 +16,8 @@ import xyz.article.api.interfaces.PacketProcessor;
 import xyz.article.api.inventory.Inventory;
 import xyz.article.api.entity.player.Player;
 
+import java.util.Objects;
+
 public class SetCreativeModeSlotPacketProcessor implements PacketProcessor {
     private static final Logger log = LoggerFactory.getLogger(SetCreativeModeSlotPacketProcessor.class);
 
@@ -36,6 +38,8 @@ public class SetCreativeModeSlotPacketProcessor implements PacketProcessor {
                     return;
                 }
             }
+
+            log.info("{} 拿取了ID为 {} 的物品", Objects.requireNonNull(Slider.getPlayer(session)).getProfile().getName(), Objects.requireNonNull(creativeModeSlotPacket.getClickedItem()).getId());
 
             if (player != null) {
                 Inventory inventory = player.getInventory();

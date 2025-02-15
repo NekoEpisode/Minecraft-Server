@@ -24,7 +24,7 @@ public class ChunkData {
 
     public ChunkData(ChunkPos chunkPos) {
         for (int i = 0; i < 24; i++) {
-            chunkSections[i] = new ChunkSection(0, DataPalette.createForChunk(), new DataPalette(GlobalPalette.INSTANCE, new BitStorage(16, 4 * 4 * 4), PaletteType.BIOME));
+            chunkSections[i] = new ChunkSection(0, new DataPalette(GlobalPalette.INSTANCE, new BitStorage(PaletteType.CHUNK.getMaxBitsPerEntry(), 16 * 16 * 16), PaletteType.CHUNK), new DataPalette(GlobalPalette.INSTANCE, new BitStorage(16, 4 * 4 * 4), PaletteType.BIOME));
         }
         this.chunkPos = chunkPos; // 使用Vector2i来表示区块的X和Z坐标。在Minecraft中，Y坐标表示高度，而区块位置仅涉及X和Z。因此，这里Vector2i的getX()对应chunkX，getY()实际表示chunkZ
         blockEntities = new BlockEntityInfo[]{};

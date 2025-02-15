@@ -26,6 +26,7 @@ public class ItemToBlock {
         map.put(40, 19); // Acacia Planks
         map.put(41, 20); // Cherry Planks
         map.put(42, 21); // Dark Oak Planks
+        map.put(299, 156); // Chest
     }
 
 
