@@ -39,9 +39,25 @@ public class PlayerActionPacketProcessor implements PacketProcessor {
                         for (Session session1 : MinecraftServer.playerSessions) {
                             session1.send(chunk.getChunkPacket());
                         }
-                    }else {
-                        // 计算在生存模式下的挖掘时长，但Slider还是个半成品所以我懒得做
-                        // In Survival Mode
+                    }
+                }
+
+                case FINISH_DIGGING -> {
+                    Player player = Slider.getPlayer(session);
+                    if (player != null) {
+                        World world = player.getWorld();
+                        BlockPos blockPos = new BlockPos(world, actionPacket.getPosition());
+                        ChunkPos chunkPos = Slider.getChunkPos(blockPos);
+                        int chunkSectionIndex = Slider.getChunkSectionIndex(blockPos.pos().getY());
+                        ChunkData chunk = world.getChunkDataMap().get(chunkPos.pos());
+                        ChunkSection[] chunkSections = chunk.getChunkSections();
+                        ChunkSection targetSection = chunkSections[chunkSectionIndex];
+                        Vector3i inChunkSectionLocation = Slider.getInChunkSectionLocation(blockPos.pos().getX(), blockPos.pos().getY(), blockPos.pos().getZ(), chunkSectionIndex);
+                        targetSection.setBlock(inChunkSectionLocation.getX(), inChunkSectionLocation.getY(), inChunkSectionLocation.getZ(), 0);
+                        session.send(new ClientboundBlockChangedAckPacket(actionPacket.getSequence()));
+                        for (Session session1 : MinecraftServer.playerSessions) {
+                            session1.send(chunk.getChunkPacket());
+                        }
                     }
                 }
             }

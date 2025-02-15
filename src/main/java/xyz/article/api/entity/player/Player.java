@@ -22,6 +22,7 @@ public class Player {
 
     private final Hand mainHand;
     private final Hand leftHand;
+    private ItemStack draggingItem;
 
     public Player(GameProfile profile, Session session, int entityID, GameMode gameMode, Inventory inventory, World world) {
         this.profile = profile;
@@ -69,6 +70,14 @@ public class Player {
 
     public Hand getMainHand() {
         return mainHand;
+    }
+
+    public void setDraggingItem(ItemStack draggingItem) {
+        this.draggingItem = draggingItem;
+    }
+
+    public ItemStack getDraggingItem() {
+        return draggingItem;
     }
 
     public Session getSession() {

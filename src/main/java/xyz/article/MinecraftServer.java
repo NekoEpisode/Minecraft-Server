@@ -20,6 +20,8 @@ import org.geysermc.mcprotocollib.network.tcp.TcpServer;
 import org.geysermc.mcprotocollib.protocol.MinecraftConstants;
 import org.geysermc.mcprotocollib.protocol.MinecraftProtocol;
 import org.geysermc.mcprotocollib.protocol.codec.MinecraftCodec;
+import org.geysermc.mcprotocollib.protocol.data.game.PlayerListEntry;
+import org.geysermc.mcprotocollib.protocol.data.game.PlayerListEntryAction;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.metadata.EntityMetadata;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.metadata.MetadataType;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.GameMode;
@@ -33,6 +35,8 @@ import org.geysermc.mcprotocollib.protocol.data.status.VersionInfo;
 import org.geysermc.mcprotocollib.protocol.packet.common.clientbound.ClientboundDisconnectPacket;
 import org.geysermc.mcprotocollib.protocol.packet.common.serverbound.ServerboundKeepAlivePacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundLoginPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundPlayerInfoRemovePacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundPlayerInfoUpdatePacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundSystemChatPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.ClientboundSetEntityDataPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.spawn.ClientboundAddEntityPacket;
@@ -46,6 +50,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import xyz.article.api.Location;
 import xyz.article.api.Slider;
+import xyz.article.api.entity.player.PlayerInfoAction;
 import xyz.article.api.interfaces.PacketProcessor;
 import xyz.article.api.inventory.Inventory;
 import xyz.article.api.entity.player.Player;
@@ -128,24 +133,23 @@ public class MinecraftServer {
 
                     if (player != null) {
                         Inventory inventory = player.getInventory();
-                        session.send(new ClientboundContainerSetContentPacket(inventory.getContainerId(), 0, inventory.getItems(), inventory.getItem(46)));
-                    }else { //问题出在所有ContainerSetContentPacket上，端口转发开了
-                        Inventory inventory = new Inventory(profile.getName() + "'s Inventory", null, 47, RunningData.inventories.size()); // 为此玩家新生成一个物品栏
-                        RunningData.inventories.put(RunningData.inventories.size(), inventory);
+                        session.send(new ClientboundContainerSetContentPacket(inventory.getContainerId(), 0, inventory.getItems(), player.getInventory().getItem(46)));
+                    }else {
+                        Inventory inventory = new Inventory(profile.getName() + "'s Inventory", ContainerType.GENERIC_9X6, 47, -1); // 为此玩家新生成一个物品栏
                         player = new Player(profile, session, new Random().nextInt(), GameMode.CREATIVE, inventory, overworld);
                         RunningData.playerList.add(player);
-                        ClientboundContainerSetContentPacket packet = new ClientboundContainerSetContentPacket(inventory.getContainerId(), 0, inventory.getItems(), null);
-                        System.out.println("Length: " + inventory.getItems().length);
-                        session.send(packet);
-                        System.out.println("Send: " + packet);
+                        session.send(new ClientboundContainerSetContentPacket(inventory.getContainerId(), 0, inventory.getItems(), null));
                     }
 
                     logger.info("{} 加入了游戏", profile.getName());
+                    ClientboundPlayerInfoUpdatePacket packet = ProtocolSender.getPlayerInfoPacketAdd(player);
                     Component component = Component.text(profile.getName() + " 加入了游戏").color(NamedTextColor.YELLOW);
                     for (Session session1 : playerSessions) {
                         session1.send(new ClientboundSystemChatPacket(component, false));
                         session1.send(new ClientboundAddEntityPacket(player.getEntityID(), profile.getId(), EntityType.PLAYER, 0d, 0d, 1d, 0, 0, 0));
+                        session1.send(packet);
                     }
+                    session.send(ProtocolSender.getPlayerInfoPacketALL());
                     playerSessions.add(session);
                     playerProfiles.add(profile);
 
@@ -162,9 +166,6 @@ public class MinecraftServer {
         server.addListener(new ServerAdapter() {
             @Override
             public void serverClosed(ServerClosedEvent event) {
-                for (Session session : playerSessions) {
-                    session.send(new ClientboundDisconnectPacket(Component.text("服务器正在关闭...")));
-                }
                 playerSessions.clear();
                 playerProfiles.clear();
                 RunningData.playerList.clear();
@@ -199,6 +200,7 @@ public class MinecraftServer {
                     Component component = Component.text(profile.getName() + " 退出了游戏").color(NamedTextColor.YELLOW);
                     for (Session session1 : playerSessions) {
                         session1.send(new ClientboundSystemChatPacket(component, false));
+                        session1.send(new ClientboundPlayerInfoRemovePacket(List.of(profile.getId())));
                     }
                     playerProfiles.remove(profile);
                 }
