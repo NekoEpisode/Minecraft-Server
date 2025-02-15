@@ -1,38 +1,31 @@
 package xyz.article.packetProcessors;
 
 import org.cloudburstmc.math.vector.Vector2f;
-import org.cloudburstmc.math.vector.Vector3d;
 import org.geysermc.mcprotocollib.network.Session;
 import org.geysermc.mcprotocollib.network.packet.Packet;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.ClientboundMoveEntityPosRotPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.ClientboundMoveEntityRotPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.ClientboundRotateHeadPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundMovePlayerPosRotPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundMovePlayerRotPacket;
 import xyz.article.MinecraftServer;
-import xyz.article.api.Location;
 import xyz.article.api.Slider;
-import xyz.article.api.interfaces.PacketProcessor;
 import xyz.article.api.entity.player.Player;
+import xyz.article.api.interfaces.PacketProcessor;
 
-public class MovePlayerPosRotPacketProcessor implements PacketProcessor {
+public class MovePlayerRotPacketProcessor implements PacketProcessor {
     @Override
     public void process(Packet packet, Session session) {
-        if (packet instanceof ServerboundMovePlayerPosRotPacket posRotPacket) {
+        if (packet instanceof ServerboundMovePlayerRotPacket rotPacket) {
             Player player = Slider.getPlayer(session);
             if (player != null) {
-                double moveX = posRotPacket.getX() - player.getLocation().pos().getX();
-                double moveY = posRotPacket.getY() - player.getLocation().pos().getY();
-                double moveZ = posRotPacket.getZ() - player.getLocation().pos().getZ();
+                float newYaw = rotPacket.getYaw();
+                float newPitch = rotPacket.getPitch();
 
-                float newYaw = posRotPacket.getYaw();
-                float newPitch = posRotPacket.getPitch();
-
-                player.setLocation(new Location(player.getWorld(), Vector3d.from(posRotPacket.getX(), posRotPacket.getY(), posRotPacket.getZ())));
                 player.setAngle(Vector2f.from(newYaw, newPitch));
 
                 for (Session session1 : MinecraftServer.playerSessions) {
                     if (!session1.equals(session)) {
-                        session1.send(new ClientboundMoveEntityPosRotPacket(player.getEntityID(), moveX, moveY, moveZ, posRotPacket.getYaw(), posRotPacket.getPitch(), posRotPacket.isOnGround()));
                         session1.send(new ClientboundRotateHeadPacket(player.getEntityID(), newYaw));
+                        session1.send(new ClientboundMoveEntityRotPacket(player.getEntityID(), rotPacket.getYaw(), rotPacket.getPitch(), rotPacket.isOnGround()));
                     }
                 }
             }

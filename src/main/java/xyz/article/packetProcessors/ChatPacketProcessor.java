@@ -92,7 +92,7 @@ public class ChatPacketProcessor implements PacketProcessor {
                     return;
                 }
                 session.send(new ClientboundGameEventPacket(buf, codecHelper));
-                Objects.requireNonNull(Slider.getPlayer(session)).setGameMode(GameMode.byId((int) number));
+                //Objects.requireNonNull(Slider.getPlayer(session)).setGameMode(GameMode.byId((int) number));
                 return;
             }
             GameProfile profile = session.getFlag(MinecraftConstants.PROFILE_KEY);

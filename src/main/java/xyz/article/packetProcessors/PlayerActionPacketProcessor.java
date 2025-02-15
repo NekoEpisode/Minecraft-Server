@@ -4,7 +4,9 @@ import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.mcprotocollib.network.Session;
 import org.geysermc.mcprotocollib.network.packet.Packet;
 import org.geysermc.mcprotocollib.protocol.data.game.chunk.ChunkSection;
+import org.geysermc.mcprotocollib.protocol.data.game.entity.player.Animation;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.GameMode;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.ClientboundAnimatePacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundBlockChangedAckPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundPlayerActionPacket;
 import xyz.article.MinecraftServer;
@@ -38,6 +40,9 @@ public class PlayerActionPacketProcessor implements PacketProcessor {
                         session.send(new ClientboundBlockChangedAckPacket(actionPacket.getSequence()));
                         for (Session session1 : MinecraftServer.playerSessions) {
                             session1.send(chunk.getChunkPacket());
+                            if (!(session1.equals(session))) {
+                                session1.send(new ClientboundAnimatePacket(player.getEntityID(), Animation.SWING_ARM));
+                            }
                         }
                     }
                 }

@@ -30,9 +30,7 @@ public class ItemToBlock {
 
 
     public static int getBlockID(int itemID) {
-        System.out.println("对照表: 物品ID " + itemID);
         if (map.get(itemID) == null) {
-            System.out.println("对照表: 未找到");
             return 0;
         }
         return map.get(itemID);

@@ -4,6 +4,8 @@ import io.netty.handler.codec.base64.Base64Decoder;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.cloudburstmc.math.vector.Vector2d;
+import org.cloudburstmc.math.vector.Vector2f;
 import org.cloudburstmc.math.vector.Vector3d;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.mcprotocollib.auth.GameProfile;
@@ -38,7 +40,10 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.Clientbound
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundPlayerInfoRemovePacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundPlayerInfoUpdatePacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundSystemChatPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.ClientboundRemoveEntitiesPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.ClientboundSetEntityDataPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundPlayerAbilitiesPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundSetHealthPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.spawn.ClientboundAddEntityPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.inventory.ClientboundContainerSetContentPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundSetChunkCacheCenterPacket;
@@ -118,38 +123,28 @@ public class MinecraftServer {
 
                     // 发送所有登录数据包
                     ProtocolSender.sendBrand("SliderMC", session); // 发送服务器品牌(服务器名称)
+                    //ProtocolSender.sendCommands(session); // 发送命令
                     List<Key> worldNames = new ArrayList<>();
                     WorldManager.worldMap.forEach((key, world) -> worldNames.add(key));
-                    session.send(new ClientboundLoginPacket(0, false, worldNames.toArray(new Key[0]), 0, 16, 16, false, false, false, new PlayerSpawnInfo(0, Key.key("minecraft:overworld"), 100, GameMode.CREATIVE, GameMode.CREATIVE, false, false, null, 100), true));
-                    session.send(new ClientboundSetDefaultSpawnPositionPacket(Vector3i.from(0, 1, 0), 0F));
-
-                    Player player = null;
-                    for (Player player1 : RunningData.playerList) {
-                        if (player1.getProfile().getId().equals(profile.getId())) {
-                            player = player1;
-                            break;
-                        }
-                    }
-
-                    if (player != null) {
-                        Inventory inventory = player.getInventory();
-                        session.send(new ClientboundContainerSetContentPacket(inventory.getContainerId(), 0, inventory.getItems(), player.getInventory().getItem(46)));
-                    }else {
-                        Inventory inventory = new Inventory(profile.getName() + "'s Inventory", ContainerType.GENERIC_9X6, 47, -1); // 为此玩家新生成一个物品栏
-                        player = new Player(profile, session, new Random().nextInt(), GameMode.CREATIVE, inventory, overworld);
-                        RunningData.playerList.add(player);
-                        session.send(new ClientboundContainerSetContentPacket(inventory.getContainerId(), 0, inventory.getItems(), null));
-                    }
-
+                    int entityID = new Random().nextInt(0, 999999999);
+                    session.send(new ClientboundLoginPacket(entityID, false, worldNames.toArray(new Key[0]), 0, 16, 16, false, false, false, new PlayerSpawnInfo(0, Key.key("minecraft:overworld"), 100, GameMode.CREATIVE, GameMode.CREATIVE, false, false, null, 100), true));
                     logger.info("{} 加入了游戏", profile.getName());
-                    ClientboundPlayerInfoUpdatePacket packet = ProtocolSender.getPlayerInfoPacketAdd(player);
-                    Component component = Component.text(profile.getName() + " 加入了游戏").color(NamedTextColor.YELLOW);
+                    Component component = Component.text(profile.getName() + " 加入了游戏, EntityID = " + entityID).color(NamedTextColor.YELLOW);
+                    Inventory inventory = new Inventory(profile.getName() + "'s Inventory", ContainerType.GENERIC_9X6, 47, -1);
+                    Player player = new Player(profile, session, entityID, GameMode.CREATIVE, inventory, overworld, new Location(overworld, Vector3d.from(8.5, 65, 8.5)), Vector2f.from(0, 0));
+                    RunningData.playerList.add(player);
+                    session.send(ProtocolSender.getPlayerInfoPacketALL());
+                    session.send(new ClientboundContainerSetContentPacket(inventory.getContainerId(), 0, inventory.getItems(), null));
                     for (Session session1 : playerSessions) {
                         session1.send(new ClientboundSystemChatPacket(component, false));
-                        session1.send(new ClientboundAddEntityPacket(player.getEntityID(), profile.getId(), EntityType.PLAYER, 0d, 0d, 1d, 0, 0, 0));
-                        session1.send(packet);
+                        session1.send(ProtocolSender.getPlayerInfoPacketAdd(player));
+                        session1.send(new ClientboundAddEntityPacket(player.getEntityID(), profile.getId(), EntityType.PLAYER, player.getLocation().pos().getX(), player.getLocation().pos().getY(), player.getLocation().pos().getZ(), player.getAngle().getX(), player.getAngle().getY(), 0));
                     }
-                    session.send(ProtocolSender.getPlayerInfoPacketALL());
+                    for (Player player1 : RunningData.playerList) {
+                        if (!player1.equals(player)) {
+                            session.send(new ClientboundAddEntityPacket(player1.getEntityID(), player1.getProfile().getId(), EntityType.PLAYER, player1.getLocation().pos().getX(), player1.getLocation().pos().getY(), player1.getLocation().pos().getZ(), player1.getAngle().getX(), player1.getAngle().getY(), 0));
+                        }
+                    }
                     playerSessions.add(session);
                     playerProfiles.add(profile);
 
@@ -159,6 +154,7 @@ public class MinecraftServer {
                             session.send(Chunk.createSimpleGrassChunk(x, z).getChunkPacket());
                         }
                     }
+                    session.send(new ClientboundSetDefaultSpawnPositionPacket(Vector3i.from(8.5, 65, 8.5), 0F));
                 }
         );
 
@@ -179,9 +175,9 @@ public class MinecraftServer {
                 event.getSession().addListener(new SessionAdapter() {
                     @Override
                     public void packetReceived(Session session, Packet packet) {
-                        if (!(packet instanceof ServerboundKeepAlivePacket || packet instanceof ServerboundMovePlayerPosPacket || packet instanceof ServerboundMovePlayerPosRotPacket || packet instanceof ServerboundMovePlayerRotPacket)) {
+                        /*if (!(packet instanceof ServerboundKeepAlivePacket)) {
                             logger.info(packet.toString());
-                        }
+                        }*/
 
                         // 交给处理器去处理
                         for (PacketProcessor processor : Register.getPacketProcessors()) {
@@ -200,15 +196,43 @@ public class MinecraftServer {
                     Component component = Component.text(profile.getName() + " 退出了游戏").color(NamedTextColor.YELLOW);
                     for (Session session1 : playerSessions) {
                         session1.send(new ClientboundSystemChatPacket(component, false));
+                        session1.send(new ClientboundRemoveEntitiesPacket(new int[]{Objects.requireNonNull(Slider.getPlayer(event.getSession())).getEntityID()}));
                         session1.send(new ClientboundPlayerInfoRemovePacket(List.of(profile.getId())));
                     }
                     playerProfiles.remove(profile);
+                    RunningData.playerList.remove(Slider.getPlayer(event.getSession()));
                 }
             }
         });
 
         server.bind();
         logger.info("服务器已在 {}:{} 启动", Settings.BIND_ADDRESS, Settings.SERVER_PORT);
+
+        new Thread(() -> {
+            Thread.currentThread().setName("Input Thread");
+            Scanner scanner = new Scanner(System.in);
+            while (true) {
+                String line = scanner.nextLine();
+                if (line.startsWith("say")) {
+                    String[] commands = line.split(" ");
+                    if (commands.length > 1) {
+                        StringBuilder builder = new StringBuilder();
+                        for (int i = 1; i < commands.length; i++) {
+                            builder.append(commands[i]);
+                            if (i != commands.length - 1) {
+                                builder.append(" ");
+                            }
+                        }
+                        for (Session session : playerSessions) {
+                            session.send(new ClientboundSystemChatPacket(Component.text("<Server> " + builder), false));
+                        }
+                        logger.info("{}: {}", "Server", builder);
+                    }else {
+                        logger.warn("需要更多参数！");
+                    }
+                }
+            }
+        }).start();
     }
 
     public static TcpServer getServer() {

@@ -23,6 +23,7 @@ public class Register {
         registerPacketProcessor(new UseItemOnPacketProcessor());
         registerPacketProcessor(new MovePlayerPosPacketProcessor());
         registerPacketProcessor(new MovePlayerPosRotPacketProcessor());
+        registerPacketProcessor(new MovePlayerRotPacketProcessor());
         registerPacketProcessor(new SetCarriedItemPacketProcessor());
         registerPacketProcessor(new SetCreativeModeSlotPacketProcessor());
     }

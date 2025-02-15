@@ -7,8 +7,10 @@ import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.mcprotocollib.network.Session;
 import org.geysermc.mcprotocollib.network.packet.Packet;
 import org.geysermc.mcprotocollib.protocol.data.game.chunk.ChunkSection;
+import org.geysermc.mcprotocollib.protocol.data.game.entity.player.Animation;
 import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundSystemChatPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.ClientboundAnimatePacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundBlockChangedAckPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundUseItemOnPacket;
 import org.slf4j.Logger;
@@ -95,6 +97,9 @@ public class UseItemOnPacketProcessor implements PacketProcessor {
                     session.send(new ClientboundBlockChangedAckPacket(useItemOnPacket.getSequence()));
                     for (Session session1 : MinecraftServer.playerSessions) {
                         session1.send(chunkData.getChunkPacket());
+                        if (!(session1.equals(session))) {
+                            session1.send(new ClientboundAnimatePacket(Objects.requireNonNull(Slider.getPlayer(session)).getEntityID(), Animation.SWING_ARM));
+                        }
                     }
                 } else {
                     log.error("Invalid section index: {}", sectionIndex);
