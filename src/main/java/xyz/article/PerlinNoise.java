@@ -21,9 +21,9 @@ import java.util.Random;
 
 public class PerlinNoise {
 
-    private static final int OCTAVES = 1; // 噪声层数，控制地形的细节
+    private static final int OCTAVES = 3; // 噪声层数，控制地形细节
     private static final double PERSISTENCE = 0.5; // 持久度，控制每层噪声的影响
-    public static final double SCALE = 0.5; // 缩放比例，控制地形的平滑度
+    public static final double SCALE = 0.02; // 缩放比例，控制地形的平滑度
 
     private final int[] permutations; // 排列数组，用于噪声计算
 
@@ -167,18 +167,18 @@ public class PerlinNoise {
 
                     for (int x = 0; x < 16; x++) {
                         for (int z = 0; z < 16; z++) {
-                            int height = (int) (noise((row * 16 + x) * PerlinNoise.SCALE, 0, (column * 16 + z) * PerlinNoise.SCALE) * 32 + 64);
+                            // 使用 Perlin 噪声动态计算高度
+                            double noiseValue = noise((row * 16 + x) * SCALE, 0, (column * 16 + z) * SCALE);
+                            int height = (int) (noiseValue * 10 + 80); // 高度在 80 上下波动，幅度为 10
                             for (int y = 0; y < 16; y++) {
                                 int blockY = i * 16 + y;
                                 if (blockY < height) {
-                                    // 填充方块，例如石头
+                                    // 填充方块
                                     section.setBlock(x, y, z, 1);
                                 } else {
-                                    // 设置空气方块
                                     section.setBlock(x, y, z, 0);
                                 }
                                 if (blockY == height) {
-                                    // 表面方块，例如草方块
                                     section.setBlock(x, y, z, 9);
                                 }
                             }
