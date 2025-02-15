@@ -2,15 +2,13 @@ package xyz.article.api.inventory;
 
 import org.geysermc.mcprotocollib.protocol.data.game.inventory.ContainerType;
 import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.inventory.ClientboundContainerSetContentPacket;
-import org.geysermc.mcprotocollib.network.Session;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Inventory {
     private final int size;
-    private final List<ItemStack> items;
+    private final ItemStack[] items;
     private final ContainerType containerType;
     private final int containerId;
     private final String name;
@@ -20,9 +18,9 @@ public class Inventory {
         this.containerType = containerType;
         this.size = size;
         this.containerId = containerId;
-        this.items = new ArrayList<>(size);
+        this.items = new ItemStack[size];
         for (int i = 0; i < size; i++) {
-            items.add(null);
+            items[i] = null;
         }
     }
 
@@ -30,22 +28,18 @@ public class Inventory {
         if (slot < 0 || slot >= size) {
             throw new IllegalArgumentException("Slot out of bounds");
         }
-        items.set(slot, item);
+        items[slot] = item;
     }
 
     public ItemStack getItem(int slot) {
         if (slot < 0 || slot >= size) {
             throw new IllegalArgumentException("Slot out of bounds");
         }
-        return items.get(slot);
+        return items[slot];
     }
 
-    public List<ItemStack> getItems() {
+    public ItemStack[] getItems() {
         return items;
-    }
-
-    public void sync(Session session) {
-        session.send(new ClientboundContainerSetContentPacket(containerId, 0, items.toArray(new ItemStack[0]), null));
     }
 
     public int getSize() {

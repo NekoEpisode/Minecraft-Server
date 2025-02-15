@@ -3,7 +3,9 @@ package xyz.article.api.entity.player;
 import org.geysermc.mcprotocollib.auth.GameProfile;
 import org.geysermc.mcprotocollib.network.Session;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.GameMode;
+import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundPlayerPositionPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.inventory.ClientboundContainerSetContentPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.inventory.ClientboundOpenScreenPacket;
 import xyz.article.api.Location;
 import xyz.article.api.inventory.Inventory;
@@ -80,6 +82,6 @@ public class Player {
 
     public void openInventory(Inventory inventory) {
         session.send(new ClientboundOpenScreenPacket(inventory.getContainerId(), inventory.getContainerType(), inventory.getName()));
-        inventory.sync(session);
+        session.send(new ClientboundContainerSetContentPacket(inventory.getContainerId(), 0, inventory.getItems(), inventory.getItem(46)));
     }
 }

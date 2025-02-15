@@ -27,8 +27,9 @@ public class SetCreativeModeSlotPacketProcessor implements PacketProcessor {
                 if (player != null) {
                     ItemStack itemStack1 = player.getInventory().getItem(slot);
                     player.getInventory().setItem(slot, null);
-                    player.getInventory().setItem(46, itemStack1); // slot46是指玩家鼠标目前拖动的方块
-                    session.send(new ClientboundContainerSetContentPacket(player.getInventory().getContainerId(), 0, player.getInventory().getItems().toArray(new ItemStack[0]), itemStack1));
+                    player.getInventory().setItem(46, itemStack1); // slot46保存玩家鼠标目前拖动的方块
+                    System.out.println("Set slot 46: " + itemStack1);
+                    session.send(new ClientboundContainerSetContentPacket(player.getInventory().getContainerId(), 0, player.getInventory().getItems(), itemStack1));
                     return;
                 }
             }
@@ -38,7 +39,7 @@ public class SetCreativeModeSlotPacketProcessor implements PacketProcessor {
                 inventory.setItem(slot, itemStack);
                 int slot1 = player.getMainHand().getCurrentSlot();
                 player.getMainHand().setCurrentItem(inventory.getItem(slot1 + 36));
-                session.send(new ClientboundContainerSetContentPacket(player.getInventory().getContainerId(), 0, player.getInventory().getItems().toArray(new ItemStack[0]), null));
+                session.send(new ClientboundContainerSetContentPacket(player.getInventory().getContainerId(), 0, player.getInventory().getItems(), null));
             }
         }
     }
