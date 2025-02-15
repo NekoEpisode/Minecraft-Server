@@ -7,7 +7,7 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.Serv
 import xyz.article.api.Slider;
 import xyz.article.api.interfaces.PacketProcessor;
 import xyz.article.api.inventory.Inventory;
-import xyz.article.api.player.Player;
+import xyz.article.api.entity.player.Player;
 
 public class SetCarriedItemPacketProcessor implements PacketProcessor {
     @Override

@@ -7,18 +7,19 @@ import org.geysermc.mcprotocollib.network.Session;
 import org.geysermc.mcprotocollib.network.packet.Packet;
 import org.geysermc.mcprotocollib.protocol.MinecraftConstants;
 import org.geysermc.mcprotocollib.protocol.data.game.inventory.ContainerType;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundPlayerChatPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundSystemChatPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.ServerboundChatPacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import xyz.article.MinecraftServer;
 import xyz.article.PerlinNoise;
+import xyz.article.RunningData;
 import xyz.article.api.Slider;
 import xyz.article.api.interfaces.PacketProcessor;
 import xyz.article.api.inventory.Inventory;
 
 import java.util.Objects;
-import java.util.Random;
 
 public class ChatPacketProcessor implements PacketProcessor {
     private static final Logger log = LoggerFactory.getLogger(ChatPacketProcessor.class);
@@ -55,7 +56,7 @@ public class ChatPacketProcessor implements PacketProcessor {
                 return;
             }
             if (chatPacket.getMessage().startsWith(".open")) {
-                Objects.requireNonNull(Slider.getPlayer("Neko110923")).openInventory(new Inventory("Inventory", ContainerType.GENERIC_9X5, 45, 0));
+                Objects.requireNonNull(Slider.getPlayer(session)).openInventory(new Inventory("Test Inventory", ContainerType.GENERIC_9X6, 54, RunningData.inventories.size()));
                 return;
             }
             if (chatPacket.getMessage().startsWith(".closeServer")) {

@@ -4,7 +4,7 @@ import org.cloudburstmc.math.vector.Vector2i;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.mcprotocollib.network.Session;
 import xyz.article.RunningData;
-import xyz.article.api.player.Player;
+import xyz.article.api.entity.player.Player;
 import xyz.article.api.world.World;
 import xyz.article.api.world.WorldManager;
 import xyz.article.api.world.block.BlockPos;

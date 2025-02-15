@@ -10,9 +10,7 @@ import org.slf4j.LoggerFactory;
 import xyz.article.api.Slider;
 import xyz.article.api.interfaces.PacketProcessor;
 import xyz.article.api.inventory.Inventory;
-import xyz.article.api.player.Player;
-
-import java.util.Objects;
+import xyz.article.api.entity.player.Player;
 
 public class SetCreativeModeSlotPacketProcessor implements PacketProcessor {
     private static final Logger log = LoggerFactory.getLogger(SetCreativeModeSlotPacketProcessor.class);
@@ -25,6 +23,16 @@ public class SetCreativeModeSlotPacketProcessor implements PacketProcessor {
             ItemStack itemStack = creativeModeSlotPacket.getClickedItem();
             int slot = creativeModeSlotPacket.getSlot();
             Player player = Slider.getPlayer(session);
+            if (itemStack == null) {
+                if (player != null) {
+                    ItemStack itemStack1 = player.getInventory().getItem(slot);
+                    player.getInventory().setItem(slot, null);
+                    player.getInventory().setItem(46, itemStack1); // slot46是指玩家鼠标目前拖动的方块
+                    session.send(new ClientboundContainerSetContentPacket(player.getInventory().getContainerId(), 0, player.getInventory().getItems().toArray(new ItemStack[0]), itemStack1));
+                    return;
+                }
+            }
+
             if (player != null) {
                 Inventory inventory = player.getInventory();
                 inventory.setItem(slot, itemStack);

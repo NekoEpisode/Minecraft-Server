@@ -1,4 +1,4 @@
-package xyz.article.api.player;
+package xyz.article.api.entity.player;
 
 import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 

@@ -1,10 +1,8 @@
-package xyz.article.api.player;
+package xyz.article.api.entity.player;
 
-import net.kyori.adventure.text.Component;
 import org.geysermc.mcprotocollib.auth.GameProfile;
 import org.geysermc.mcprotocollib.network.Session;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.GameMode;
-import org.geysermc.mcprotocollib.protocol.data.game.inventory.ContainerType;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundPlayerPositionPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.inventory.ClientboundOpenScreenPacket;
 import xyz.article.api.Location;
@@ -71,13 +69,13 @@ public class Player {
         return mainHand;
     }
 
+    public Session getSession() {
+        return session;
+    }
+
     public void teleportTo(Location location) {
         this.world = location.world();
         session.send(new ClientboundPlayerPositionPacket(location.pos().getX(), location.pos().getY(), location.pos().getZ(), 0, 0, 0));
-    }
-
-    public Session getSession() {
-        return session;
     }
 
     public void openInventory(Inventory inventory) {
