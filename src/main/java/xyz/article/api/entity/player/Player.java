@@ -37,6 +37,7 @@ public class Player {
         this.gameMode = gameMode;
         this.inventory = inventory;
         this.world = world;
+        world.addSession(session);
         this.location = location;
         this.angle = angle;
 
@@ -101,8 +102,14 @@ public class Player {
     }
 
     public void teleportTo(Location location) {
-        this.world = location.world();
+        setWorld(location.world());
         session.send(new ClientboundPlayerPositionPacket(location.pos().getX(), location.pos().getY(), location.pos().getZ(), 0, 0, 0));
+    }
+
+    public void setWorld(World world) {
+        this.world.removeSession(session);
+        this.world = world;
+        world.addSession(session);
     }
 
     public void openInventory(Inventory inventory) {

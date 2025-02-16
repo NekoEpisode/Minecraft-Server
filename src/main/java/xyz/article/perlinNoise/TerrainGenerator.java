@@ -8,6 +8,8 @@ import org.geysermc.mcprotocollib.protocol.data.game.chunk.palette.GlobalPalette
 import org.geysermc.mcprotocollib.protocol.data.game.chunk.palette.PaletteType;
 import org.geysermc.mcprotocollib.protocol.data.game.level.LightUpdateData;
 import org.geysermc.mcprotocollib.protocol.data.game.level.block.BlockEntityInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import xyz.article.MinecraftServer;
 import xyz.article.api.world.chunk.ChunkData;
 import xyz.article.api.world.chunk.ChunkPos;
@@ -17,6 +19,7 @@ import java.util.BitSet;
 import java.util.List;
 
 public class TerrainGenerator {
+    private static final Logger log = LoggerFactory.getLogger(TerrainGenerator.class);
     private final PerlinNoise perlinNoise;
     private final double SCALE;
 
@@ -26,7 +29,11 @@ public class TerrainGenerator {
     }
 
     public ChunkData[][] generateTerrain(int rows, int columns) {
+        log.info("开始构建地形...");
+
         ChunkData[][] chunks = new ChunkData[rows][columns];
+        int totalChunks = rows * columns; // 总区块数量
+        int completedChunks = 0; // 已完成的区块数量
 
         for (int row = 0; row < rows; row++) {
             for (int column = 0; column < columns; column++) {
@@ -72,6 +79,13 @@ public class TerrainGenerator {
 
                 BlockEntityInfo[] blockEntities = new BlockEntityInfo[]{};
                 chunks[row][column] = new ChunkData(new ChunkPos(MinecraftServer.overworld, chunkPos), chunkSections, heightMap, blockEntities, lightUpdateData);
+
+                // 更新已完成区块数量
+                completedChunks++;
+                // 计算进度百分比
+                double progress = (double) completedChunks / totalChunks * 100;
+                // 输出进度信息
+                log.info("进度: 已完成 {} / 总区块 {}   {}%", completedChunks, totalChunks, progress);
             }
         }
 

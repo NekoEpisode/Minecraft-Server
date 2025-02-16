@@ -137,8 +137,8 @@ public class MinecraftServer {
                     playerProfiles.add(profile);
 
                     session.send(new ClientboundSetChunkCacheCenterPacket(0, 0));
-                    int centerX = 8; // 中心点的X坐标
-                    int centerY = 8; // 中心点的Y坐标
+                    int centerX = 32; // 中心点的X坐标
+                    int centerY = 32; // 中心点的Y坐标
                     int radius = 5; // 半径，表示从中心点向外的区块数量
 
                     int startX = centerX - radius;
@@ -180,7 +180,7 @@ public class MinecraftServer {
                 playerSessions.clear();
                 playerProfiles.clear();
                 RunningData.playerList.clear();
-                WorldManager.worldMap.forEach((key, world) -> world.save());
+                WorldManager.worldMap.forEach((key, world) -> world.stop());
 
                 logger.info("服务器已关闭");
             }

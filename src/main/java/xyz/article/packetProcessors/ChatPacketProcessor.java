@@ -85,6 +85,15 @@ public class ChatPacketProcessor implements PacketProcessor {
                 //Objects.requireNonNull(Slider.getPlayer(session)).setGameMode(GameMode.byId((int) number));
                 return;
             }
+            if (chatPacket.getMessage().startsWith(".time")) {
+                String[] strings = chatPacket.getMessage().split(" ");
+                if (strings.length < 2) {
+                    return;
+                }
+
+                Objects.requireNonNull(Slider.getPlayer(session)).getWorld().setWorldTime(Integer.parseInt(strings[1]));
+                return;
+            }
             GameProfile profile = session.getFlag(MinecraftConstants.PROFILE_KEY);
             log.info("{}: {}", profile.getName(), chatPacket.getMessage());
             Component msg = Component.text("<" + profile.getName() + "> " + chatPacket.getMessage());

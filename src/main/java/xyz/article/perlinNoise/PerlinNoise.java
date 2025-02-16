@@ -4,8 +4,8 @@ import java.util.Random;
 
 public class PerlinNoise {
 
-    private static final int OCTAVES = 3; // 噪声层数，控制地形细节
-    private static final double PERSISTENCE = 0.5; // 持久度，控制每层噪声的影响
+    private static final int OCTAVES = 6; // 噪声层数，控制地形细节
+    private static final double PERSISTENCE = 0.6; // 持久度，控制每层噪声的影响
 
     private final int[] permutations; // 排列数组，用于噪声计算
 

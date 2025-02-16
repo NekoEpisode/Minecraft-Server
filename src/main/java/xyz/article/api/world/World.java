@@ -2,16 +2,16 @@ package xyz.article.api.world;
 
 import net.kyori.adventure.key.Key;
 import org.cloudburstmc.math.vector.Vector2i;
+import org.geysermc.mcprotocollib.network.Session;
 import org.geysermc.mcprotocollib.protocol.data.game.chunk.ChunkSection;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundSetTimePacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import xyz.article.api.world.chunk.ChunkData;
 
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import java.util.LinkedList;
 import java.util.Queue;
@@ -19,17 +19,22 @@ import java.util.Queue;
 public class World {
     private static final Logger log = LoggerFactory.getLogger(World.class);
     private Map<Vector2i, ChunkData> chunkDataMap = new ConcurrentHashMap<>();
+    private final List<Session> sessions = new CopyOnWriteArrayList<>();
     private final Key key;
 
-    private static final int TPS = 20; // 每秒 20 次 tick
+    private static final int TPS = 20; // 目标TPS
     private static final long TICK_INTERVAL = 1000 / TPS; // 每次 tick 的时间间隔(ms)
     private final ScheduledExecutorService scheduler;
     private int tickCounter = 0;
+
+    private int worldTime = 0;
+    private long worldAge = 0;
 
     // 用于记录 tick 时间
     private final Queue<Long> tickTimes = new LinkedList<>();
 
     public World(Key key) {
+        log.info("正在初始化世界 {}", key);
         WorldManager.worldMap.put(key, this);
         this.key = key;
 
@@ -41,6 +46,7 @@ public class World {
      * 启动 Tick 循环
      */
     private void startTicking() {
+        log.info("世界 {} 初始化完成", key);
         scheduler.scheduleAtFixedRate(this::tick, 0, TICK_INTERVAL, TimeUnit.MILLISECONDS);
     }
 
@@ -59,11 +65,25 @@ public class World {
         tickCounter++;
         if (tickCounter >= TPS * 10) { // 10 秒的 tick 次数
             log.info("1s TPS: {}, 1m TPS: {}, 5m TPS: {}, 15m TPS: {}",
-                    calculateTPS(1),
-                    calculateTPS(60),
-                    calculateTPS(5 * 60),
-                    calculateTPS(15 * 60));
+                    String.format("%.2f", calculateTPS(1)),
+                    String.format("%.2f", calculateTPS(60)),
+                    String.format("%.2f", calculateTPS(5 * 60)),
+                    String.format("%.2f", calculateTPS(15 * 60)));
             tickCounter = 0;
+        }
+
+        //计算时间
+        // 每次 tick 增加 1 个刻度
+        worldTime++;
+
+        for (Session session : sessions) {
+            session.send(new ClientboundSetTimePacket(worldAge, worldTime));
+        }
+
+        // 如果时间超过一天（24000 刻度），则重置为 0
+        if (worldTime >= 24000) {
+            worldTime = 0;
+            worldAge++;
         }
     }
 
@@ -100,6 +120,8 @@ public class World {
         } catch (InterruptedException e) {
             scheduler.shutdownNow();
         }
+
+        save();
     }
 
     public void setChunkMap(Map<Vector2i, ChunkData> chunkDataMap) {
@@ -112,6 +134,22 @@ public class World {
 
     public Key getKey() {
         return key;
+    }
+
+    public List<Session> getSessions() {
+        return sessions;
+    }
+
+    public void addSession(Session session) {
+        sessions.add(session);
+    }
+
+    public void removeSession(Session session) {
+        sessions.remove(session);
+    }
+
+    public void setWorldTime(int worldTime) {
+        this.worldTime = worldTime;
     }
 
     public void setBlock(int x, int y, int z, int blockID) {
