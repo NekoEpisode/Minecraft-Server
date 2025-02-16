@@ -12,10 +12,11 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.play
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.inventory.ClientboundContainerSetContentPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.inventory.ClientboundOpenScreenPacket;
 import xyz.article.api.Location;
+import xyz.article.api.command.CommandSender;
 import xyz.article.api.inventory.Inventory;
 import xyz.article.api.world.World;
 
-public class Player {
+public class Player extends CommandSender {
     private final GameProfile profile;
     private final Session session;
     private final int entityID;
@@ -26,7 +27,6 @@ public class Player {
 
     private final Hand mainHand;
     private final Hand leftHand;
-    private ItemStack draggingItem;
     private Location location;
     private Vector2f angle;
 

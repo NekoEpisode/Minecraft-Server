@@ -189,6 +189,7 @@ public class MinecraftServer {
             public void serverClosed(ServerClosedEvent event) {
                 playerSessions.clear();
                 playerProfiles.clear();
+                Register.destroy();
                 RunningData.playerList.clear();
                 WorldManager.worldMap.forEach((key, world) -> world.stop());
 
