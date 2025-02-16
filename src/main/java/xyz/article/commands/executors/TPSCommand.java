@@ -48,11 +48,11 @@ public class TPSCommand implements CommandExecutor {
     }
 
     private NamedTextColor getColor(double tps) {
-        if ((int) tps > 19) {
+        if (tps >= 19.0D) {
             return NamedTextColor.GREEN;
-        } else if ((int) tps >= 15) {
+        } else if (tps >= 15.0D) {
             return NamedTextColor.YELLOW;
-        } else if ((int) tps < 15) {
+        } else if (tps < 15.0D) {
             return NamedTextColor.RED;
         } else {
             return NamedTextColor.GRAY;
