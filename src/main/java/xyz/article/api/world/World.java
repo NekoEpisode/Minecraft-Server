@@ -4,10 +4,16 @@ import net.kyori.adventure.key.Key;
 import org.cloudburstmc.math.vector.Vector2i;
 import org.geysermc.mcprotocollib.network.Session;
 import org.geysermc.mcprotocollib.protocol.data.game.chunk.ChunkSection;
+import org.geysermc.mcprotocollib.protocol.data.game.item.component.BlockStateProperties;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundSetTimePacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import xyz.article.Chunk;
+import xyz.article.MathUtils;
+import xyz.article.api.Slider;
+import xyz.article.api.entity.player.Player;
 import xyz.article.api.world.chunk.ChunkData;
+import xyz.article.perlinNoise.TerrainGenerator;
 
 import java.util.List;
 import java.util.Map;
@@ -15,6 +21,8 @@ import java.util.concurrent.*;
 
 import java.util.LinkedList;
 import java.util.Queue;
+
+import static xyz.article.RunningData.playerList;
 
 public class World {
     private static final Logger log = LoggerFactory.getLogger(World.class);
@@ -38,7 +46,7 @@ public class World {
         WorldManager.worldMap.put(key, this);
         this.key = key;
 
-        this.scheduler = Executors.newScheduledThreadPool(1);
+        this.scheduler = Executors.newScheduledThreadPool(1); // 开启线程池处理Tick
         startTicking();
     }
 
@@ -64,7 +72,8 @@ public class World {
         // 每 10 秒输出一次 TPS 信息
         tickCounter++;
         if (tickCounter >= TPS * 10) { // 10 秒的 tick 次数
-            log.info("1s TPS: {}, 1m TPS: {}, 5m TPS: {}, 15m TPS: {}",
+            log.info("World {}: 1s TPS: {}, 1m TPS: {}, 5m TPS: {}, 15m TPS: {}",
+                    key,
                     String.format("%.2f", calculateTPS(1)),
                     String.format("%.2f", calculateTPS(60)),
                     String.format("%.2f", calculateTPS(5 * 60)),
@@ -74,7 +83,7 @@ public class World {
 
         //计算时间
         // 每次 tick 增加 1 个刻度
-        worldTime++;
+        worldTime = worldTime + 2;
 
         for (Session session : sessions) {
             session.send(new ClientboundSetTimePacket(worldAge, worldTime));
@@ -85,6 +94,28 @@ public class World {
             worldTime = 0;
             worldAge++;
         }
+
+        /*for (Session session : sessions) {
+            Player player = Slider.getPlayer(session);
+            List<int[]> list; //获取圆内各个区块坐标
+            if (player != null) {
+                list = MathUtils.getChunkCoordinatesInCircle(((int) player.getLocation().pos().getX() >> 4), ((int) player.getLocation().pos().getZ() >> 4), 4);
+                for (int[] coord : list) {
+                    if (chunkDataMap.get(Vector2i.from(coord[0], coord[1])) == null) { //检查玩家所处的世界内是否已经有这个区块
+                        ChunkData chunkData = Chunk.createSimpleGrassChunk(coord[0], coord[1]);
+                        chunkDataMap.put(Vector2i.from(coord[0], coord[1]), chunkData);
+                        System.out.println("new");
+                        for (Session session1 : sessions) {
+                            session1.send(chunkData.getChunkPacket());
+                        }
+                    } else {
+                        for (Session session1 : sessions) {
+                            session1.send(chunkDataMap.get(Vector2i.from(coord[0], coord[1])).getChunkPacket());
+                        }
+                    }
+                }
+            }
+        }*/
     }
 
     /**
@@ -148,6 +179,10 @@ public class World {
         sessions.remove(session);
     }
 
+    /**
+     * 设置世界时间
+     * @param worldTime 世界时间
+     */
     public void setWorldTime(int worldTime) {
         this.worldTime = worldTime;
     }

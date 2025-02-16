@@ -30,8 +30,6 @@ public class ChunkData {
         blockEntities = new BlockEntityInfo[]{};
         heightMap = new HeightMap();
         lightUpdateData = new LightUpdateData(new BitSet(), new BitSet(), new BitSet(), new BitSet(), List.of(), List.of());
-
-        chunkPos.world().getChunkDataMap().put(chunkPos.pos(), this);
     }
     public ChunkData(ChunkPos chunkPos, ChunkSection[] chunkSections, HeightMap heightMap, BlockEntityInfo[] blockEntities, LightUpdateData lightUpdateData) {
         this.chunkSections = chunkSections;
@@ -39,8 +37,6 @@ public class ChunkData {
         this.blockEntities = blockEntities;
         this.heightMap = heightMap;
         this.lightUpdateData = lightUpdateData;
-
-        chunkPos.world().getChunkDataMap().put(chunkPos.pos(), this);
     }
 
     // Getter/Setters

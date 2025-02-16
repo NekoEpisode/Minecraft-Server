@@ -3,7 +3,9 @@ package xyz.article.packetProcessors;
 import org.cloudburstmc.math.vector.Vector3d;
 import org.geysermc.mcprotocollib.network.Session;
 import org.geysermc.mcprotocollib.network.packet.Packet;
+import org.geysermc.mcprotocollib.protocol.data.game.entity.Effect;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.ClientboundMoveEntityPosPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.ClientboundUpdateMobEffectPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundPlayerPositionPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundMovePlayerPosPacket;
 import xyz.article.MinecraftServer;
@@ -32,11 +34,13 @@ public class MovePlayerPosPacketProcessor implements PacketProcessor {
                     }
                 }
 
-                if (playerPosPacket.getY() < -200) {
-                    session.send(new ClientboundPlayerPositionPacket(playerPosPacket.getX(), 400d, playerPosPacket.getZ(), player.getAngle().getX(), player.getAngle().getY(), new Random().nextInt()));
+                if (playerPosPacket.getY() < -400) {
+                    session.send(new ClientboundUpdateMobEffectPacket(player.getEntityID(), Effect.BLINDNESS, 255, 30, true, false, false, false));
+                    session.send(new ClientboundPlayerPositionPacket(playerPosPacket.getX(), 1000d, playerPosPacket.getZ(), player.getAngle().getX(), player.getAngle().getY(), new Random().nextInt()));
                 }
-                if (playerPosPacket.getY() > 400) {
-                    session.send(new ClientboundPlayerPositionPacket(playerPosPacket.getX(), -200d, playerPosPacket.getZ(), player.getAngle().getX(), player.getAngle().getY(), new Random().nextInt()));
+                if (playerPosPacket.getY() > 1000) {
+                    session.send(new ClientboundUpdateMobEffectPacket(player.getEntityID(), Effect.BLINDNESS, 255, 30, true, false, false, false));
+                    session.send(new ClientboundPlayerPositionPacket(playerPosPacket.getX(), -400d, playerPosPacket.getZ(), player.getAngle().getX(), player.getAngle().getY(), new Random().nextInt()));
                 }
             }
         }

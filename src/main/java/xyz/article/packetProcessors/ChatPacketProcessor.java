@@ -9,6 +9,7 @@ import org.geysermc.mcprotocollib.network.Session;
 import org.geysermc.mcprotocollib.network.packet.Packet;
 import org.geysermc.mcprotocollib.protocol.MinecraftConstants;
 import org.geysermc.mcprotocollib.protocol.codec.MinecraftCodecHelper;
+import org.geysermc.mcprotocollib.protocol.data.game.entity.player.GameMode;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundSystemChatPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundPlayerPositionPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundGameEventPacket;
@@ -64,7 +65,7 @@ public class ChatPacketProcessor implements PacketProcessor {
                 return;
             }
             if (chatPacket.getMessage().startsWith(".tp")) {
-                session.send(new ClientboundPlayerPositionPacket(0, 330, 0, 0, 0, new Random().nextInt()));
+                session.send(new ClientboundPlayerPositionPacket(119, 18, 115, 0, 0, new Random().nextInt()));
                 return;
             }
             if (chatPacket.getMessage().startsWith(".gamemode")) {
@@ -82,7 +83,7 @@ public class ChatPacketProcessor implements PacketProcessor {
                     return;
                 }
                 session.send(new ClientboundGameEventPacket(buf, codecHelper));
-                //Objects.requireNonNull(Slider.getPlayer(session)).setGameMode(GameMode.byId((int) number));
+                Objects.requireNonNull(Slider.getPlayer(session)).setGameMode(GameMode.byId((int) number));
                 return;
             }
             if (chatPacket.getMessage().startsWith(".time")) {

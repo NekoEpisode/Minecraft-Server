@@ -1,11 +1,14 @@
 package xyz.article.packetProcessors;
 
 import org.cloudburstmc.math.vector.Vector2f;
+import org.cloudburstmc.math.vector.Vector2i;
 import org.cloudburstmc.math.vector.Vector3d;
 import org.geysermc.mcprotocollib.network.Session;
 import org.geysermc.mcprotocollib.network.packet.Packet;
+import org.geysermc.mcprotocollib.protocol.data.game.entity.Effect;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.ClientboundMoveEntityPosRotPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.ClientboundRotateHeadPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.ClientboundUpdateMobEffectPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundPlayerPositionPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundMovePlayerPosRotPacket;
 import xyz.article.MinecraftServer;
@@ -40,22 +43,14 @@ public class MovePlayerPosRotPacketProcessor implements PacketProcessor {
                 }
 
                 if (posRotPacket.getY() < -400) {
-                    session.send(new ClientboundPlayerPositionPacket(posRotPacket.getX(), 700d, posRotPacket.getZ(), player.getAngle().getX(), player.getAngle().getY(), new Random().nextInt()));
+                    session.send(new ClientboundUpdateMobEffectPacket(player.getEntityID(), Effect.BLINDNESS, 255, 30, true, false, false, false));
+                    session.send(new ClientboundPlayerPositionPacket(posRotPacket.getX(), 1000d, posRotPacket.getZ(), player.getAngle().getX(), player.getAngle().getY(), new Random().nextInt()));
                 }
-                if (posRotPacket.getY() > 700) {
+                if (posRotPacket.getY() > 1000) {
+                    session.send(new ClientboundUpdateMobEffectPacket(player.getEntityID(), Effect.BLINDNESS, 255, 30, true, false, false, false));
                     session.send(new ClientboundPlayerPositionPacket(posRotPacket.getX(), -400d, posRotPacket.getZ(), player.getAngle().getX(), player.getAngle().getY(), new Random().nextInt()));
                 }
             }
         }
-    }
-
-    private float calculateAngleDifference(float current, float newAngle) {
-        float difference = newAngle - current;
-        if (difference > 180) {
-            difference -= 360;
-        } else if (difference < -180) {
-            difference += 360;
-        }
-        return difference;
     }
 }

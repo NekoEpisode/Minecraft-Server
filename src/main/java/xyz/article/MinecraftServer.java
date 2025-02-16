@@ -30,6 +30,7 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.Clientbound
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundPlayerInfoRemovePacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundSystemChatPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.ClientboundRemoveEntitiesPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundPlayerPositionPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.spawn.ClientboundAddEntityPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.inventory.ClientboundContainerSetContentPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundSetChunkCacheCenterPacket;
@@ -61,7 +62,6 @@ public class MinecraftServer {
     private static final List<GameProfile> playerProfiles = new ArrayList<>();
     private static TcpServer server;
     public static World overworld;
-    private final static Map<ChunkPos, ChunkData> cache = new HashMap<>();
 
     public static void main(String[] args) throws IOException {
         new WhenClose();
@@ -137,9 +137,9 @@ public class MinecraftServer {
                     playerProfiles.add(profile);
 
                     session.send(new ClientboundSetChunkCacheCenterPacket(0, 0));
-                    int centerX = 32; // 中心点的X坐标
-                    int centerY = 32; // 中心点的Y坐标
-                    int radius = 5; // 半径，表示从中心点向外的区块数量
+                    /*int centerX = 0; // 中心点的X坐标
+                    int centerY = 0; // 中心点的Y坐标
+                    int radius = 10; // 半径，表示从中心点向外的区块数量
 
                     int startX = centerX - radius;
                     int endX = centerX + radius;
@@ -155,15 +155,22 @@ public class MinecraftServer {
                             // 计算实际的区块坐标
                             int chunkX = startX + i;
                             int chunkZ = startZ + l;
-                            ChunkPos chunkPos = new ChunkPos(overworld, Vector2i.from(chunkX, chunkZ));
+                            if (data == null) {
+                                session.send(player.getWorld().getChunkDataMap().get(Vector2i.from(chunkX, chunkZ)).getChunkPacket());
+                                return;
+                            }
+                            //session.send(data[i][l].getChunkPacket());
+                        }
+                    }*/
 
-                            if (cache.get(chunkPos) == null) {
-                                ChunkData chunkData = data[i][l];
-                                cache.put(chunkPos, chunkData);
-                                session.send(chunkData.getChunkPacket());
-                            } else {
-                                ChunkData chunkData1 = cache.get(chunkPos);
-                                session.send(chunkData1.getChunkPacket());
+                    for (int i = -4; i < 4; i++) {
+                        for (int q = -4; q < 4; q++) {
+                            if (MinecraftServer.overworld.getChunkDataMap().get(Vector2i.from(i, q)) == null) {
+                                ChunkData data = Chunk.createSimpleGrassChunk(i, q);
+                                MinecraftServer.overworld.getChunkDataMap().put(Vector2i.from(i, q), data);
+                                session.send(data.getChunkPacket());
+                            }else {
+                                session.send(MinecraftServer.overworld.getChunkDataMap().get(Vector2i.from(i, q)).getChunkPacket());
                             }
                         }
                     }

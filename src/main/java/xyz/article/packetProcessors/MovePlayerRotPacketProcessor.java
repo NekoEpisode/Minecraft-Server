@@ -31,14 +31,4 @@ public class MovePlayerRotPacketProcessor implements PacketProcessor {
             }
         }
     }
-
-    private float calculateAngleDifference(float current, float newAngle) {
-        float difference = newAngle - current;
-        if (difference > 180) {
-            difference -= 360;
-        } else if (difference < -180) {
-            difference += 360;
-        }
-        return difference;
-    }
 }
