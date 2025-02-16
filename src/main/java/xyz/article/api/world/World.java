@@ -15,12 +15,8 @@ import xyz.article.api.entity.player.Player;
 import xyz.article.api.world.chunk.ChunkData;
 import xyz.article.perlinNoise.TerrainGenerator;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.*;
-
-import java.util.LinkedList;
-import java.util.Queue;
 
 import static xyz.article.RunningData.playerList;
 
@@ -33,7 +29,6 @@ public class World {
     private static final int TPS = 20; // 目标TPS
     private static final long TICK_INTERVAL = 1000 / TPS; // 每次 tick 的时间间隔(ms)
     private final ScheduledExecutorService scheduler;
-    private int tickCounter = 0;
 
     private int worldTime = 0;
     private long worldAge = 0;
@@ -67,18 +62,6 @@ public class World {
         // 清理超过 15 分钟的记录
         while (!tickTimes.isEmpty() && currentTime - tickTimes.peek() > 15 * 60 * 1000) {
             tickTimes.poll();
-        }
-
-        // 每 10 秒输出一次 TPS 信息
-        tickCounter++;
-        if (tickCounter >= TPS * 10) { // 10 秒的 tick 次数
-            log.info("World {}: 1s TPS: {}, 1m TPS: {}, 5m TPS: {}, 15m TPS: {}",
-                    key,
-                    String.format("%.2f", calculateTPS(1)),
-                    String.format("%.2f", calculateTPS(60)),
-                    String.format("%.2f", calculateTPS(5 * 60)),
-                    String.format("%.2f", calculateTPS(15 * 60)));
-            tickCounter = 0;
         }
 
         //计算时间
@@ -177,6 +160,22 @@ public class World {
 
     public void removeSession(Session session) {
         sessions.remove(session);
+    }
+
+    /**
+     * 获取TPS
+     *
+     * @return index[0] 1s, [1] 5s, [2] 15s, [3] 1m, [4] 5m, [5] 15m
+     */
+    public List<Double> getTPS() {
+        List<Double> doubles = new ArrayList<>();
+        doubles.add(Math.round(calculateTPS(1) * 100.0) / 100.0);
+        doubles.add(Math.round(calculateTPS(5) * 100.0) / 100.0);
+        doubles.add(Math.round(calculateTPS(15) * 100.0) / 100.0);
+        doubles.add(Math.round(calculateTPS(60) * 100.0) / 100.0);
+        doubles.add(Math.round(calculateTPS(5 * 60) * 100.0) / 100.0);
+        doubles.add(Math.round(calculateTPS(15 * 60) * 100.0) / 100.0);
+        return doubles;
     }
 
     /**

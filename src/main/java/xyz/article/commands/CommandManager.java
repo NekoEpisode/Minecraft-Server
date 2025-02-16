@@ -1,13 +1,9 @@
 package xyz.article.commands;
 
-import net.kyori.adventure.key.Key;
 import org.geysermc.mcprotocollib.network.Session;
 import org.geysermc.mcprotocollib.protocol.data.game.command.CommandNode;
-import org.geysermc.mcprotocollib.protocol.data.game.command.CommandParser;
 import org.geysermc.mcprotocollib.protocol.data.game.command.CommandType;
-import org.geysermc.mcprotocollib.protocol.data.game.command.SuggestionType;
 import org.geysermc.mcprotocollib.protocol.data.game.command.properties.IntegerProperties;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundCommandSuggestionsPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundCommandsPacket;
 import xyz.article.Register;
 
@@ -25,14 +21,14 @@ public class CommandManager {
         for (String name : Register.getCommandExecutors().keySet()) {
             count++;
             CommandNode node = new CommandNode(
-                CommandType.LITERAL,
-                true,
-                new int[]{},
-                OptionalInt.empty(),
-                name,
-                CommandParser.MESSAGE,
-                new IntegerProperties(0, 1),
-                SuggestionType.ALL_RECIPES.getResourceLocation()
+                    CommandType.LITERAL,
+                    true,
+                    new int[]{},
+                    OptionalInt.empty(),
+                    name,
+                    null,
+                    new IntegerProperties(0, 1),
+                    null
             );
             index.add(count);
             cache.add(node);
@@ -44,13 +40,15 @@ public class CommandManager {
         }
 
         CommandNode root = new CommandNode(
-            CommandType.ROOT, //根节点
-            false, childIndices, //子节点在列表中的索引
-            OptionalInt.empty(), //重定向
-            "", //命令名称
-            null, //解析器，不知道干啥的
-            null, //命令Properties
-            null); //建议类型
+                CommandType.ROOT, //根节点
+                false, //是否可执行
+                childIndices, //子节点在列表中的索引
+                OptionalInt.empty(), //重定向
+                "", //命令名称
+                null, //解析器，不知道干啥的
+                null, //命令Properties
+                null //建议类型
+        );
         commandNodes.add(root);
 
         commandNodes.addAll(cache);

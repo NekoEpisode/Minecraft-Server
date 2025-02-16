@@ -41,6 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import xyz.article.api.Location;
 import xyz.article.api.Slider;
+import xyz.article.api.command.CommandSender;
 import xyz.article.api.interfaces.PacketProcessor;
 import xyz.article.api.inventory.Inventory;
 import xyz.article.api.entity.player.Player;
@@ -239,23 +240,18 @@ public class MinecraftServer {
             Scanner scanner = new Scanner(System.in);
             while (true) {
                 String line = scanner.nextLine();
-                if (line.startsWith("say")) {
-                    String[] commands = line.split(" ");
-                    if (commands.length > 1) {
-                        StringBuilder builder = new StringBuilder();
-                        for (int i = 1; i < commands.length; i++) {
-                            builder.append(commands[i]);
-                            if (i != commands.length - 1) {
-                                builder.append(" ");
-                            }
-                        }
-                        for (Session session : playerSessions) {
-                            session.send(new ClientboundSystemChatPacket(Component.text("<Server> " + builder), false));
-                        }
-                        logger.info("{}: {}", "Server", builder);
-                    }else {
-                        logger.warn("需要更多参数！");
+                String[] commands = line.split(" ");
+                List<String> args1 = new ArrayList<>(Arrays.asList(commands).subList(1, commands.length));
+                final boolean[] executed = new boolean[1];
+                Register.getCommandExecutors().forEach((name, executor) -> {
+                    if (name.equalsIgnoreCase(commands[0])) {
+                        executor.execute(new CommandSender("Console"), args1.toArray(new String[0]));
+                        executed[0] = true;
                     }
+                });
+
+                if (!executed[0]) {
+                    logger.info("未知的命令！");
                 }
             }
         }).start();

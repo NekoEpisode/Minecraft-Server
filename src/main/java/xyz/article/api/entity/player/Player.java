@@ -1,6 +1,7 @@
 package xyz.article.api.entity.player;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.cloudburstmc.math.vector.Vector2f;
 import org.geysermc.mcprotocollib.auth.GameProfile;
 import org.geysermc.mcprotocollib.network.Session;
@@ -116,8 +117,12 @@ public class Player extends CommandSender {
         session.send(new ClientboundContainerSetContentPacket(inventory.getContainerId(), 0, inventory.getItems(), inventory.getItem(46)));
     }
 
-    public void sendMessage(Component message) {
-        session.send(new ClientboundSystemChatPacket(message, false));
+    @Override
+    public void sendMessage(String message) {
+        session.send(new ClientboundSystemChatPacket(Component.text(message), false));
+    }
+    public void sendMessage(Component component) {
+        session.send(new ClientboundSystemChatPacket(component, false));
     }
     
     public void sendPacket(Packet packet){

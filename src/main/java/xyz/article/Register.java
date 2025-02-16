@@ -41,7 +41,7 @@ public class Register {
         registerPacketProcessor(new SetCreativeModeSlotPacketProcessor());
         registerPacketProcessor(new ChatCommandPacketProcessor());
         
-        registerCommand("Test", new TestCommand());
+        registerCommand("tps", new TPSCommand());
     }
 
     protected static void destroy() {
