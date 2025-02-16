@@ -9,10 +9,6 @@ import org.geysermc.mcprotocollib.network.Session;
 import org.geysermc.mcprotocollib.network.packet.Packet;
 import org.geysermc.mcprotocollib.protocol.MinecraftConstants;
 import org.geysermc.mcprotocollib.protocol.codec.MinecraftCodecHelper;
-import org.geysermc.mcprotocollib.protocol.data.game.entity.player.GameMode;
-import org.geysermc.mcprotocollib.protocol.data.game.inventory.ContainerType;
-import org.geysermc.mcprotocollib.protocol.data.game.level.notify.GameEvent;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundPlayerChatPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundSystemChatPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundPlayerPositionPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundGameEventPacket;
@@ -20,12 +16,9 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.Serverbound
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import xyz.article.MinecraftServer;
-import xyz.article.PerlinNoise;
-import xyz.article.RunningData;
 import xyz.article.api.Slider;
 import xyz.article.api.entity.player.Player;
 import xyz.article.api.interfaces.PacketProcessor;
-import xyz.article.api.inventory.Inventory;
 
 import java.util.Objects;
 import java.util.Random;

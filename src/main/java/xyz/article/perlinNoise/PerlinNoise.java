@@ -1,29 +1,11 @@
-package xyz.article;
+package xyz.article.perlinNoise;
 
-import org.cloudburstmc.math.vector.Vector2i;
-import org.geysermc.mcprotocollib.network.Session;
-import org.geysermc.mcprotocollib.protocol.data.game.chunk.BitStorage;
-import org.geysermc.mcprotocollib.protocol.data.game.chunk.ChunkSection;
-import org.geysermc.mcprotocollib.protocol.data.game.chunk.DataPalette;
-import org.geysermc.mcprotocollib.protocol.data.game.chunk.palette.GlobalPalette;
-import org.geysermc.mcprotocollib.protocol.data.game.chunk.palette.ListPalette;
-import org.geysermc.mcprotocollib.protocol.data.game.chunk.palette.PaletteType;
-import org.geysermc.mcprotocollib.protocol.data.game.level.LightUpdateData;
-import org.geysermc.mcprotocollib.protocol.data.game.level.block.BlockEntityInfo;
-import xyz.article.api.world.chunk.ChunkData;
-import xyz.article.api.world.chunk.ChunkPos;
-import xyz.article.api.world.chunk.HeightMap;
-
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.List;
 import java.util.Random;
 
 public class PerlinNoise {
 
     private static final int OCTAVES = 3; // 噪声层数，控制地形细节
     private static final double PERSISTENCE = 0.5; // 持久度，控制每层噪声的影响
-    public static final double SCALE = 0.02; // 缩放比例，控制地形的平滑度
 
     private final int[] permutations; // 排列数组，用于噪声计算
 
@@ -142,58 +124,5 @@ public class PerlinNoise {
         double u = h < 8 ? x : y,
                 v = h < 4 ? y : h == 12 || h == 14 ? x : z;
         return ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v);
-    }
-
-    /**
-     * 构建地形并返回区块数组
-     *
-     * @param rows    行数
-     * @param columns 列数
-     * @return 区块数组
-     */
-    public ChunkData[][] generateTerrain(int rows, int columns) {
-        ChunkData[][] chunks = new ChunkData[rows][columns];
-
-        for (int row = 0; row < rows; row++) {
-            for (int column = 0; column < columns; column++) {
-                Vector2i chunkPos = Vector2i.from(row, column);
-                ChunkSection[] chunkSections = new ChunkSection[24];
-
-                for (int i = 0; i < 24; i++) {
-                    DataPalette blockPalette = DataPalette.createForChunk();
-                    DataPalette biomePalette = new DataPalette(GlobalPalette.INSTANCE, new BitStorage(16, 16 * 16 * 16), PaletteType.BIOME);
-                    ChunkSection section = new ChunkSection(0, blockPalette, biomePalette);
-                    chunkSections[i] = section;
-
-                    for (int x = 0; x < 16; x++) {
-                        for (int z = 0; z < 16; z++) {
-                            // 使用 Perlin 噪声动态计算高度
-                            double noiseValue = noise((row * 16 + x) * SCALE, 0, (column * 16 + z) * SCALE);
-                            int height = (int) (noiseValue * 10 + 80); // 高度在 80 上下波动，幅度为 10
-                            for (int y = 0; y < 16; y++) {
-                                int blockY = i * 16 + y;
-                                if (blockY < height) {
-                                    // 填充方块
-                                    section.setBlock(x, y, z, 1);
-                                } else {
-                                    section.setBlock(x, y, z, 0);
-                                }
-                                if (blockY == height) {
-                                    section.setBlock(x, y, z, 9);
-                                }
-                            }
-                        }
-                    }
-                }
-
-                HeightMap heightMap = new HeightMap();
-                BlockEntityInfo[] blockEntities = new BlockEntityInfo[]{};
-                LightUpdateData lightUpdateData = new LightUpdateData(new BitSet(), new BitSet(), new BitSet(), new BitSet(), List.of(), List.of());
-
-                chunks[row][column] = new ChunkData(new ChunkPos(MinecraftServer.overworld, chunkPos), chunkSections, heightMap, blockEntities, lightUpdateData);
-            }
-        }
-
-        return chunks;
     }
 }

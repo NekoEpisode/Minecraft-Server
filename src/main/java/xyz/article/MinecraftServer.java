@@ -1,6 +1,5 @@
 package xyz.article;
 
-import io.netty.handler.codec.base64.Base64Decoder;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -19,42 +18,27 @@ import org.geysermc.mcprotocollib.network.tcp.TcpServer;
 import org.geysermc.mcprotocollib.protocol.MinecraftConstants;
 import org.geysermc.mcprotocollib.protocol.MinecraftProtocol;
 import org.geysermc.mcprotocollib.protocol.codec.MinecraftCodec;
-import org.geysermc.mcprotocollib.protocol.data.game.PlayerListEntry;
-import org.geysermc.mcprotocollib.protocol.data.game.PlayerListEntryAction;
-import org.geysermc.mcprotocollib.protocol.data.game.entity.metadata.EntityMetadata;
-import org.geysermc.mcprotocollib.protocol.data.game.entity.metadata.MetadataType;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.GameMode;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.PlayerSpawnInfo;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.type.EntityType;
 import org.geysermc.mcprotocollib.protocol.data.game.inventory.ContainerType;
-import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.geysermc.mcprotocollib.protocol.data.status.PlayerInfo;
 import org.geysermc.mcprotocollib.protocol.data.status.ServerStatusInfo;
 import org.geysermc.mcprotocollib.protocol.data.status.VersionInfo;
 import org.geysermc.mcprotocollib.protocol.packet.common.clientbound.ClientboundDisconnectPacket;
-import org.geysermc.mcprotocollib.protocol.packet.common.serverbound.ServerboundKeepAlivePacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundLoginPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundPlayerInfoRemovePacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundPlayerInfoUpdatePacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundSystemChatPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.ClientboundRemoveEntitiesPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.ClientboundSetEntityDataPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundPlayerAbilitiesPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundSetHealthPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.spawn.ClientboundAddEntityPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.inventory.ClientboundContainerSetContentPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundChunksBiomesPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundSetChunkCacheCenterPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundSetChunkCacheRadiusPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundSetDefaultSpawnPositionPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundMovePlayerPosPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundMovePlayerPosRotPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundMovePlayerRotPacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import xyz.article.api.Location;
 import xyz.article.api.Slider;
-import xyz.article.api.entity.player.PlayerInfoAction;
 import xyz.article.api.interfaces.PacketProcessor;
 import xyz.article.api.inventory.Inventory;
 import xyz.article.api.entity.player.Player;
@@ -63,6 +47,8 @@ import xyz.article.api.world.WorldManager;
 import xyz.article.api.world.block.ItemToBlock;
 import xyz.article.api.world.chunk.ChunkData;
 import xyz.article.api.world.chunk.ChunkPos;
+import xyz.article.perlinNoise.PerlinNoise;
+import xyz.article.perlinNoise.TerrainGenerator;
 
 import java.io.File;
 import java.io.IOException;
@@ -151,7 +137,6 @@ public class MinecraftServer {
                     playerProfiles.add(profile);
 
                     session.send(new ClientboundSetChunkCacheCenterPacket(0, 0));
-                    PerlinNoise noise = new PerlinNoise(12345L);
                     int centerX = 8; // 中心点的X坐标
                     int centerY = 8; // 中心点的Y坐标
                     int radius = 5; // 半径，表示从中心点向外的区块数量
@@ -163,7 +148,7 @@ public class MinecraftServer {
 
                     int width = endX - startX + 1;
                     int length = endZ - startZ + 1;
-                    ChunkData[][] data = noise.generateTerrain(width, length);
+                    ChunkData[][] data = new TerrainGenerator(new Random().nextLong(), 0.02).generateTerrain(width, length);
 
                     for (int i = 0; i < width; i++) {
                         for (int l = 0; l < length; l++) {
