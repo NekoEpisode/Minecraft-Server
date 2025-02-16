@@ -49,7 +49,7 @@ import xyz.article.api.world.WorldManager;
 import xyz.article.api.world.block.ItemToBlock;
 import xyz.article.api.world.chunk.ChunkData;
 import xyz.article.api.world.chunk.ChunkPos;
-import xyz.article.commands.CommandTest;
+import xyz.article.commands.CommandManager;
 import xyz.article.perlinNoise.PerlinNoise;
 import xyz.article.perlinNoise.TerrainGenerator;
 
@@ -179,7 +179,7 @@ public class MinecraftServer {
 
                     session.send(new ClientboundSetChunkCacheRadiusPacket(10));
                     session.send(new ClientboundSetDefaultSpawnPositionPacket(Vector3i.from(8.5, 65, 8.5), 0F));
-                    CommandTest.sendPacket(session);
+                    CommandManager.sendPacket(session);
                 }
         );
 

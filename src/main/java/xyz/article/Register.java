@@ -3,6 +3,7 @@ package xyz.article;
 import xyz.article.api.command.CommandExecutor;
 import xyz.article.api.interfaces.PacketProcessor;
 import xyz.article.packetProcessors.*;
+import xyz.article.commands.executors.*;
 
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,8 @@ public class Register {
         registerPacketProcessor(new SetCarriedItemPacketProcessor());
         registerPacketProcessor(new SetCreativeModeSlotPacketProcessor());
         registerPacketProcessor(new ChatCommandPacketProcessor());
+        
+        registerCommand("Test", new TestCommand());
     }
 
     protected static void destroy() {

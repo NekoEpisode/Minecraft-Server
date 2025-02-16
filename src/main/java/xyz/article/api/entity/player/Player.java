@@ -1,12 +1,10 @@
 package xyz.article.api.entity.player;
 
 import net.kyori.adventure.text.Component;
-import org.cloudburstmc.math.vector.Vector2d;
 import org.cloudburstmc.math.vector.Vector2f;
 import org.geysermc.mcprotocollib.auth.GameProfile;
 import org.geysermc.mcprotocollib.network.Session;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.GameMode;
-import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundSystemChatPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundPlayerPositionPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.inventory.ClientboundContainerSetContentPacket;
@@ -15,6 +13,7 @@ import xyz.article.api.Location;
 import xyz.article.api.command.CommandSender;
 import xyz.article.api.inventory.Inventory;
 import xyz.article.api.world.World;
+import org.geysermc.mcprotocollib.network.packet.Packet;
 
 public class Player extends CommandSender {
     private final GameProfile profile;
@@ -119,5 +118,9 @@ public class Player extends CommandSender {
 
     public void sendMessage(Component message) {
         session.send(new ClientboundSystemChatPacket(message, false));
+    }
+    
+    public void sendPacket(Packet packet){
+        session.send(packet);
     }
 }
