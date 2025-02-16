@@ -16,7 +16,14 @@ import java.util.OptionalInt;
 public class CommandTest {
     public static void sendPacket(Session session) {
         List<CommandNode> commandNodes = new ArrayList<>();
-        CommandNode root = new CommandNode(CommandType.ROOT, false, new int[]{ 1 }, OptionalInt.empty(), "", null, null, null);
+        CommandNode root = new CommandNode(
+                CommandType.ROOT, //根节点
+                false, new int[]{ 1 }, //子节点在列表中的索引
+                OptionalInt.empty(), //重定向
+                "", //命令名称
+                null, //解析器，不知道干啥的
+                null, //命令Properties
+                null); //建议类型
         CommandNode test = new CommandNode(CommandType.LITERAL, true, new int[]{}, OptionalInt.empty(), "gamemode", CommandParser.MESSAGE, new IntegerProperties(0, 1), SuggestionType.ASK_SERVER.getResourceLocation());
         commandNodes.add(root);
         commandNodes.add(test);
