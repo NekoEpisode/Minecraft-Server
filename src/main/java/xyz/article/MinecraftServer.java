@@ -26,6 +26,7 @@ import org.geysermc.mcprotocollib.protocol.data.status.PlayerInfo;
 import org.geysermc.mcprotocollib.protocol.data.status.ServerStatusInfo;
 import org.geysermc.mcprotocollib.protocol.data.status.VersionInfo;
 import org.geysermc.mcprotocollib.protocol.packet.common.clientbound.ClientboundDisconnectPacket;
+import org.geysermc.mcprotocollib.protocol.packet.common.serverbound.ServerboundKeepAlivePacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundLoginPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundPlayerInfoRemovePacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundSystemChatPacket;
@@ -48,6 +49,7 @@ import xyz.article.api.world.WorldManager;
 import xyz.article.api.world.block.ItemToBlock;
 import xyz.article.api.world.chunk.ChunkData;
 import xyz.article.api.world.chunk.ChunkPos;
+import xyz.article.commands.CommandTest;
 import xyz.article.perlinNoise.PerlinNoise;
 import xyz.article.perlinNoise.TerrainGenerator;
 
@@ -177,6 +179,7 @@ public class MinecraftServer {
 
                     session.send(new ClientboundSetChunkCacheRadiusPacket(10));
                     session.send(new ClientboundSetDefaultSpawnPositionPacket(Vector3i.from(8.5, 65, 8.5), 0F));
+                    CommandTest.sendPacket(session);
                 }
         );
 

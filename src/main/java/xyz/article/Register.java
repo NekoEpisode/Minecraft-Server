@@ -26,5 +26,6 @@ public class Register {
         registerPacketProcessor(new MovePlayerRotPacketProcessor());
         registerPacketProcessor(new SetCarriedItemPacketProcessor());
         registerPacketProcessor(new SetCreativeModeSlotPacketProcessor());
+        registerPacketProcessor(new ChatCommandPacketProcessor());
     }
 }
