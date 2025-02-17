@@ -20,7 +20,7 @@ public class TPSCommand implements CommandExecutor {
                 List<Double> tps = world.getTPS();
                 for (int i = 0; i < 6; i++) {
                     double tps1 = tps.get(i);
-                    component1 = component1.append(Component.text(tps1)).color(getColor(tps1));
+                    component1 = component1.append(Component.text(tps1).color(getColor(tps1)));
                     if (i != 6 - 1) {
                         component1 = component1.append(Component.text(", ").color(NamedTextColor.GRAY));
                     }
@@ -47,15 +47,13 @@ public class TPSCommand implements CommandExecutor {
         });
     }
 
-    private NamedTextColor getColor(double tps) {
+    private synchronized NamedTextColor getColor(double tps) {
         if (tps >= 19.0D) {
             return NamedTextColor.GREEN;
         } else if (tps >= 15.0D) {
             return NamedTextColor.YELLOW;
-        } else if (tps < 15.0D) {
-            return NamedTextColor.RED;
         } else {
-            return NamedTextColor.GRAY;
+            return NamedTextColor.RED;
         }
     }
 }
