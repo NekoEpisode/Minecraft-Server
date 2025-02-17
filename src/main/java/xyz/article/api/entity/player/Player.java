@@ -16,6 +16,8 @@ import xyz.article.api.inventory.Inventory;
 import xyz.article.api.world.World;
 import org.geysermc.mcprotocollib.network.packet.Packet;
 
+import java.util.UUID;
+
 public class Player extends CommandSender {
     private final GameProfile profile;
     private final Session session;
@@ -99,6 +101,16 @@ public class Player extends CommandSender {
 
     public Session getSession() {
         return session;
+    }
+
+    @Override
+    public String getName() {
+        return profile.getName();
+    }
+
+    @Override
+    public UUID getUuid() {
+        return profile.getId();
     }
 
     public void teleportTo(Location location) {

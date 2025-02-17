@@ -19,7 +19,7 @@ public class Register {
     }
 
     public static void registerCommand(String name, CommandExecutor commandExecutor) {
-        commandExecutors.put(name, commandExecutor);
+        commandExecutors.put(name.toLowerCase(), commandExecutor);
     }
 
     public static List<PacketProcessor> getPacketProcessors() {
@@ -42,6 +42,7 @@ public class Register {
         registerPacketProcessor(new ChatCommandPacketProcessor());
         
         registerCommand("tps", new TPSCommand());
+        registerCommand("gamemode", new GameModeCommand());
     }
 
     protected static void destroy() {
