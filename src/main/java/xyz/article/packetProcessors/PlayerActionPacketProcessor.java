@@ -16,6 +16,7 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.Clie
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.ClientboundSetEntityDataPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundBlockChangedAckPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.spawn.ClientboundAddEntityPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.inventory.ClientboundContainerSetContentPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundPlayerActionPacket;
 import xyz.article.MinecraftServer;
 import xyz.article.api.Location;
@@ -106,6 +107,16 @@ public class PlayerActionPacketProcessor implements PacketProcessor {
                             velocityY += 0.2;
                             velocityZ *= speed;
 
+                            int slot = player.getMainHand().getCurrentSlot() + 36;
+                            int amount = player.getInventory().getItem(slot).getAmount();
+                            if (amount > 1) {
+                                amount--;
+                                ItemStack itemStack1 = new ItemStack(player.getInventory().getItem(slot).getId(), amount, player.getInventory().getItem(slot).getDataComponents());
+                                player.getInventory().setItem(slot, itemStack1);
+                            } else {
+                                player.getInventory().setItem(slot, null);
+                            }
+                            player.sendPacket(new ClientboundContainerSetContentPacket(-1, 0, player.getInventory().getItems(), player.getInventory().getItem(36)));
                             // 发送生成物品实体的数据包
                             Entity entity = new ItemEntity(new Location(player.getWorld(), Vector3d.from(x, y, z)), EntityType.ITEM, id, itemStack);
                             player.getWorld().getEntities().add(entity);
