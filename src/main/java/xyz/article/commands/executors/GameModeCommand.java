@@ -56,7 +56,7 @@ public class GameModeCommand implements CommandExecutor {
             buf.writeFloat(getGameModeId(gameMode));
             target.sendPacket(new ClientboundGameEventPacket(buf, codecHelper));
             target.setGameMode(gameMode);
-            target.sendMessage(Component.text("您的游戏模式已被设为" + getFriendlyGameModeName(gameMode) + "模式").color(NamedTextColor.GREEN));
+            target.sendMessage(Component.text("您的游戏模式已被设为" + getFriendlyGameModeName(gameMode) + "模式"));
         } else {
             if (args.length < 2) {
                 commandSender.sendMessage("用法：/gamemode <游戏模式> <玩家>");
@@ -87,7 +87,7 @@ public class GameModeCommand implements CommandExecutor {
                 buf.writeFloat(getGameModeId(gameMode));
                 target.sendPacket(new ClientboundGameEventPacket(buf, codecHelper));
                 target.setGameMode(gameMode);
-                target.sendMessage(Component.text("您的游戏模式已被设为" + getFriendlyGameModeName(gameMode) + "模式").color(NamedTextColor.GREEN));
+                target.sendMessage(Component.text("您的游戏模式已被设为" + getFriendlyGameModeName(gameMode) + "模式"));
                 commandSender.sendMessage("已将 " + target.getName() + " 的游戏模式设置为" + getFriendlyGameModeName(gameMode) + "模式");
             }
         }
