@@ -3,9 +3,6 @@ package xyz.article.api.inventory;
 import org.geysermc.mcprotocollib.protocol.data.game.inventory.ContainerType;
 import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class Inventory {
     private final int size;
     private final ItemStack[] items;
@@ -24,37 +21,37 @@ public class Inventory {
         }
     }
 
-    public void setItem(int slot, ItemStack item) {
+    public synchronized void setItem(int slot, ItemStack item) {
         if (slot < 0 || slot >= size) {
             throw new IllegalArgumentException("Slot out of bounds");
         }
         items[slot] = item;
     }
 
-    public ItemStack getItem(int slot) {
+    public synchronized ItemStack getItem(int slot) {
         if (slot < 0 || slot >= size) {
             throw new IllegalArgumentException("Slot out of bounds");
         }
         return items[slot];
     }
 
-    public ItemStack[] getItems() {
+    public synchronized ItemStack[] getItems() {
         return items;
     }
 
-    public int getSize() {
+    public synchronized int getSize() {
         return size;
     }
 
-    public int getContainerId() {
+    public synchronized int getContainerId() {
         return containerId;
     }
 
-    public ContainerType getContainerType() {
+    public synchronized ContainerType getContainerType() {
         return containerType;
     }
 
-    public String getName() {
+    public synchronized String getName() {
         return name;
     }
 }

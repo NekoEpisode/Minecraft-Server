@@ -7,12 +7,12 @@ import xyz.article.api.Location;
 public class ItemEntity extends Entity {
     private final ItemStack itemStack;
 
-    public ItemEntity(Location location, EntityType entityType, int entityId, ItemStack itemStack) {
-        super(location, entityType, entityId);
+    public ItemEntity(Location location, EntityType entityType, int entityId, ItemStack itemStack, long spawnTime) {
+        super(location, entityType, entityId, spawnTime);
         this.itemStack = itemStack;
     }
 
-    public ItemStack getItemStack() {
+    public synchronized ItemStack getItemStack() {
         return itemStack;
     }
 }

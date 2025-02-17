@@ -93,20 +93,6 @@ public class PlayerActionPacketProcessor implements PacketProcessor {
                             double y = location.pos().getY();
                             double z = location.pos().getZ();
 
-                            // 计算玩家视线方向的速度向量
-                            float yaw = player.getAngle().getX();
-                            float pitch = player.getAngle().getY();
-                            double velocityX = -Math.sin(Math.toRadians(yaw)) * Math.cos(Math.toRadians(pitch));
-                            double velocityY = -Math.sin(Math.toRadians(pitch));
-                            double velocityZ = Math.cos(Math.toRadians(yaw)) * Math.cos(Math.toRadians(pitch));
-
-                            // 应用速度系数
-                            double speed = 5.5;
-                            velocityX *= speed;
-                            velocityY *= speed;
-                            velocityY += 0.2;
-                            velocityZ *= speed;
-
                             int slot = player.getMainHand().getCurrentSlot() + 36;
                             int amount = player.getInventory().getItem(slot).getAmount();
                             if (amount > 1) {
@@ -118,7 +104,7 @@ public class PlayerActionPacketProcessor implements PacketProcessor {
                             }
                             player.sendPacket(new ClientboundContainerSetContentPacket(-1, 0, player.getInventory().getItems(), player.getInventory().getItem(36)));
                             // 发送生成物品实体的数据包
-                            Entity entity = new ItemEntity(new Location(player.getWorld(), Vector3d.from(x, y, z)), EntityType.ITEM, id, itemStack);
+                            Entity entity = new ItemEntity(new Location(player.getWorld(), Vector3d.from(x, y, z)), EntityType.ITEM, id, itemStack, System.currentTimeMillis());
                             player.getWorld().getEntities().add(entity);
                             session.send(new ClientboundAddEntityPacket(id, uuid, EntityType.ITEM, x, y, z, 0, 0, 0));
                             session.send(new ClientboundSetEntityDataPacket(id, new EntityMetadata[] {

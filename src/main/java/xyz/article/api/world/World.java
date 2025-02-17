@@ -60,31 +60,31 @@ public class World {
         save();
     }
 
-    public void setChunkMap(Map<Vector2i, ChunkData> chunkDataMap) {
+    public synchronized void setChunkMap(Map<Vector2i, ChunkData> chunkDataMap) {
         this.chunkDataMap = chunkDataMap;
     }
 
-    public Map<Vector2i, ChunkData> getChunkDataMap() {
+    public synchronized Map<Vector2i, ChunkData> getChunkDataMap() {
         return chunkDataMap;
     }
 
-    public Key getKey() {
+    public synchronized Key getKey() {
         return key;
     }
 
-    public List<Session> getSessions() {
+    public synchronized List<Session> getSessions() {
         return sessions;
     }
 
-    public void addSession(Session session) {
+    public synchronized void addSession(Session session) {
         sessions.add(session);
     }
 
-    public void removeSession(Session session) {
+    public synchronized void removeSession(Session session) {
         sessions.remove(session);
     }
 
-    public List<Entity> getEntities() {
+    public synchronized List<Entity> getEntities() {
         return entities;
     }
 
@@ -93,7 +93,7 @@ public class World {
      *
      * @return index[0] 1s, [1] 5s, [2] 15s, [3] 1m, [4] 5m, [5] 15m
      */
-    public List<Double> getTPS() {
+    public synchronized List<Double> getTPS() {
         return worldTick.getTPS();
     }
 
@@ -101,15 +101,15 @@ public class World {
      * 设置世界时间
      * @param worldTime 世界时间
      */
-    public void setWorldTime(int worldTime) {
+    public synchronized void setWorldTime(int worldTime) {
         this.worldTime = worldTime;
     }
 
-    public int getWorldTime() {
+    public synchronized int getWorldTime() {
         return worldTime;
     }
 
-    public void setBlock(int x, int y, int z, int blockID) {
+    public synchronized void setBlock(int x, int y, int z, int blockID) {
         int chunkX = x >> 4;
         int chunkZ = z >> 4;
         ChunkData chunk = chunkDataMap.get(Vector2i.from(chunkX, chunkZ));
@@ -129,7 +129,7 @@ public class World {
         }
     }
 
-    public void save() {
+    public synchronized void save() {
         log.info("正在保存世界 {}", key);
     }
 }

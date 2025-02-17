@@ -1,8 +1,11 @@
 package xyz.article.api.world;
 
+import org.cloudburstmc.math.vector.Vector3d;
 import org.geysermc.mcprotocollib.network.Session;
+import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.ClientboundRemoveEntitiesPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.ClientboundSetEntityMotionPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.ClientboundTeleportEntityPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.inventory.ClientboundContainerSetContentPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundSetTimePacket;
 import org.jetbrains.annotations.NotNull;
@@ -12,10 +15,7 @@ import xyz.article.api.entity.ItemEntity;
 import xyz.article.api.entity.player.Player;
 import xyz.article.api.inventory.Inventory;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 
 import static xyz.article.RunningData.playerList;
 
@@ -27,6 +27,7 @@ public class WorldTick {
     private long worldAge = 0;
     // 用于记录 tick 时间
     private final Queue<Long> tickTimes = new LinkedList<>();
+    private final Map<Entity, Location> cache = new HashMap<>();
 
     public WorldTick(World world) {
         this.world = world;
@@ -79,103 +80,55 @@ public class WorldTick {
             }
         }*/
 
-
-        //未完成
-        /*for (Entity entity : world.getEntities()) {
-            if (entity instanceof ItemEntity itemEntity) {
-                Player player = getClosestPlayerNearby(entity, playerList);
-                if (player != null) {
-                    int slot = -1;
-                    Inventory inventory = player.getInventory();
-                    for (int i = 9; i < inventory.getSize() - 2; i++) {
-                        if (inventory.getItem(i) == null) {
-                            slot = i;
-                            break;
-                        }
-                    }
-
-                    if (slot != -1) {
-                        Location entityLocation = entity.getLocation();
-                        Location playerLocation = player.getLocation();
-
-                        // 计算从实体到玩家的向量
-                        ClientboundSetEntityMotionPacket motionPacket = getClientboundSetEntityMotionPacket(entity, playerLocation, entityLocation);
-                        player.sendPacket(motionPacket);
-
-                        if (entityLocation.distance(playerLocation) < 0.3) {
-                            player.sendPacket(new ClientboundRemoveEntitiesPacket(new int[]{entity.getEntityId()}));
-                            inventory.setItem(slot, itemEntity.getItemStack());
-                            player.sendPacket(new ClientboundContainerSetContentPacket(-1, 0, inventory.getItems(), inventory.getItem(36)));
-                        }
-                    }
+        for (Entity entity : world.getEntities()) {
+            for (Player player : playerList) {
+                if (cache.get(entity) != null && !cache.get(entity).equals(entity.getLocation())) {
+                    cache.put(entity, entity.getLocation());
+                    player.sendPacket(new ClientboundTeleportEntityPacket(entity.getEntityId(), entity.getLocation().pos().getX(), entity.getLocation().pos().getY(), entity.getLocation().pos().getZ(), 0, 0, true));
                 }
             }
-        }*/
-    }
 
-    private @NotNull ClientboundSetEntityMotionPacket getClientboundSetEntityMotionPacket(Entity entity, Location playerLocation, Location entityLocation) {
-        double vectorX = playerLocation.pos().getX() - entityLocation.pos().getX();
-        double vectorY = playerLocation.pos().getY() - entityLocation.pos().getY();
-        double vectorZ = playerLocation.pos().getZ() - entityLocation.pos().getZ();
-
-        double length = Math.sqrt(vectorX * vectorX + vectorY * vectorY + vectorZ * vectorZ);
-        vectorX /= length;
-        vectorY /= length;
-        vectorZ /= length;
-
-        double motionX = vectorX * 0.5;
-        double motionY = vectorY * 0.5;
-        double motionZ = vectorZ * 0.5;
-
-        return new ClientboundSetEntityMotionPacket(entity.getEntityId(), motionX, motionY, motionZ);
-    }
-
-    protected Player getClosestPlayerNearby(Entity entity, List<Player> players) {
-        double entityX = entity.getLocation().pos().getX();
-        double entityY = entity.getLocation().pos().getY();
-        double entityZ = entity.getLocation().pos().getZ();
-        Player closestPlayer = null;
-        double closestDistance = Double.MAX_VALUE;
-
-        // 遍历实体周围的每个格子
-        for (int dx = -3; dx <= 3; dx++) {
-            for (int dy = -3; dy <= 3; dy++) {
-                for (int dz = -3; dz <= 3; dz++) {
-                    // 计算格子中心点的坐标
-                    double centerX = entityX + dx + 0.5;
-                    double centerY = entityY + dy + 0.5;
-                    double centerZ = entityZ + dz + 0.5;
-
-                    // 检查是否有玩家在这个格子里
-                    for (Player player : players) {
-                        double distance = isPlayerInBlock(player, centerX, centerY, centerZ);
-                        if (distance != -1 && distance < closestDistance) {
-                            closestDistance = distance;
+            if (entity instanceof ItemEntity itemEntity) {
+                long currentTime1 = System.currentTimeMillis();
+                if (currentTime1 - itemEntity.getSpawnTime() > 2500) {
+                    Location entityLocation = entity.getLocation();
+                    double closestPlayerDistance = Double.MAX_VALUE;
+                    Player closestPlayer = null;
+                    for (Player player : playerList) {
+                        double distance = entityLocation.distance(player.getLocation());
+                        if (distance < closestPlayerDistance) {
+                            closestPlayerDistance = distance;
                             closestPlayer = player;
+                        }
+                    }
+
+                    if (closestPlayer != null) {
+                        int slot = -1;
+                        Inventory inventory = closestPlayer.getInventory();
+                        for (int i = 9; i < inventory.getSize() - 2; i++) {
+                            if (inventory.getItem(i) == null) {
+                                slot = i;
+                                break;
+                            }
+                        }
+
+                        if (slot != -1) {
+                            final double PICKUP_RANGE = 2.5;
+                            if (closestPlayerDistance < PICKUP_RANGE) {
+                                if (world.getEntities().contains(entity)) {
+                                    world.getEntities().remove(entity);
+                                    closestPlayer.sendPacket(new ClientboundRemoveEntitiesPacket(new int[]{entity.getEntityId()}));
+                                    System.out.println("捡起, slot" + slot);
+                                    inventory.setItem(slot, itemEntity.getItemStack());
+                                    closestPlayer.sendPacket(new ClientboundContainerSetContentPacket(-1, 0, inventory.getItems(), inventory.getItem(36)));
+                                }
+                            }
                         }
                     }
                 }
             }
         }
-        return closestPlayer;
     }
-
-    private double isPlayerInBlock(Player player, double centerX, double centerY, double centerZ) {
-        double playerX = player.getLocation().pos().getX();
-        double playerY = player.getLocation().pos().getY();
-        double playerZ = player.getLocation().pos().getZ();
-
-        // 计算玩家与格子中心点的距离
-        double distance = Math.sqrt(
-                Math.pow(playerX - centerX, 2) +
-                        Math.pow(playerY - centerY, 2) +
-                        Math.pow(playerZ - centerZ, 2)
-        );
-
-        // 如果玩家在格子内，返回距离，否则返回-1
-        return distance <= 0.5 ? distance : -1;
-    }
-
 
     /**
      * 计算指定时间范围内的 TPS
