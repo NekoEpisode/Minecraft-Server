@@ -202,13 +202,13 @@ public class MinecraftServer {
                                             true
                                     )
                             },
-                            new String[]{"slider:join"},
+                            new String[] { "slider:join "},
                             progress
                     ));
 
-                    for (Session session1 : playerSessions) {
+                    /*for (Session session1 : playerSessions) {
                         session1.send(new ClientboundSystemChatPacket(Component.text(profile.getName() + " 完成了挑战").append(Component.text("[欢迎来到Slider]").color(NamedTextColor.DARK_PURPLE)), false));
-                    }
+                    }*/
                 }
         );
 
