@@ -18,20 +18,21 @@ import org.geysermc.mcprotocollib.network.tcp.TcpServer;
 import org.geysermc.mcprotocollib.protocol.MinecraftConstants;
 import org.geysermc.mcprotocollib.protocol.MinecraftProtocol;
 import org.geysermc.mcprotocollib.protocol.codec.MinecraftCodec;
+import org.geysermc.mcprotocollib.protocol.data.game.advancement.Advancement;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.GameMode;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.PlayerSpawnInfo;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.type.EntityType;
 import org.geysermc.mcprotocollib.protocol.data.game.inventory.ContainerType;
+import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.geysermc.mcprotocollib.protocol.data.status.PlayerInfo;
 import org.geysermc.mcprotocollib.protocol.data.status.ServerStatusInfo;
 import org.geysermc.mcprotocollib.protocol.data.status.VersionInfo;
 import org.geysermc.mcprotocollib.protocol.packet.common.clientbound.ClientboundDisconnectPacket;
-import org.geysermc.mcprotocollib.protocol.packet.common.serverbound.ServerboundKeepAlivePacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundLoginPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundPlayerInfoRemovePacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundSystemChatPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundUpdateAdvancementsPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.ClientboundRemoveEntitiesPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundPlayerPositionPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.spawn.ClientboundAddEntityPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.inventory.ClientboundContainerSetContentPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundSetChunkCacheCenterPacket;
@@ -49,10 +50,7 @@ import xyz.article.api.world.World;
 import xyz.article.api.world.WorldManager;
 import xyz.article.api.world.block.ItemToBlock;
 import xyz.article.api.world.chunk.ChunkData;
-import xyz.article.api.world.chunk.ChunkPos;
 import xyz.article.commands.CommandManager;
-import xyz.article.perlinNoise.PerlinNoise;
-import xyz.article.perlinNoise.TerrainGenerator;
 
 import java.io.File;
 import java.io.IOException;
@@ -63,11 +61,10 @@ public class MinecraftServer {
     private static final ProxyInfo AUTH_PROXY = null;
     public static final List<Session> playerSessions = new ArrayList<>();
     private static final List<GameProfile> playerProfiles = new ArrayList<>();
-    private static TcpServer server;
+    private volatile static TcpServer server;
     public static World overworld;
 
     public static void main(String[] args) throws IOException {
-        new WhenClose();
         Thread.currentThread().setName("Main Thread");
         File propertiesFile = new File("./settings.yml");
         if (propertiesFile.createNewFile()) logger.info("已创建所需文件");
@@ -114,7 +111,6 @@ public class MinecraftServer {
 
                     // 发送所有登录数据包
                     ProtocolSender.sendBrand("SliderMC", session); // 发送服务器品牌(服务器名称)
-                    //ProtocolSender.sendCommands(session); // 发送命令
                     List<Key> worldNames = new ArrayList<>();
                     WorldManager.worldMap.forEach((key, world) -> worldNames.add(key));
                     int entityID = new Random().nextInt(0, 999999999);
@@ -181,6 +177,38 @@ public class MinecraftServer {
                     session.send(new ClientboundSetChunkCacheRadiusPacket(10));
                     session.send(new ClientboundSetDefaultSpawnPositionPacket(Vector3i.from(8.5, 65, 8.5), 0F));
                     CommandManager.sendPacket(session);
+
+                    Map<String, Map<String, Long>> progress = new HashMap<>();
+                    Map<String, Long> welcomeProgress = new HashMap<>();
+                    welcomeProgress.put("slider:join", System.currentTimeMillis());
+                    progress.put("slider:welcome", welcomeProgress);
+                    session.send(new ClientboundUpdateAdvancementsPacket(
+                            false,
+                            new Advancement[]{
+                                    new Advancement(
+                                            "slider:welcome",
+                                            new ArrayList<>(),
+                                            new Advancement.DisplayData(
+                                                    Component.text("欢迎来到Slider"),
+                                                    Component.text("进入SliderMC服务器"),
+                                                    new ItemStack(27),
+                                                    Advancement.DisplayData.AdvancementType.CHALLENGE,
+                                                    true,
+                                                    false,
+                                                    0f,
+                                                    0f,
+                                                    "minecraft:textures/block/dirt.png"
+                                            ),
+                                            true
+                                    )
+                            },
+                            new String[]{"slider:join"},
+                            progress
+                    ));
+
+                    for (Session session1 : playerSessions) {
+                        session1.send(new ClientboundSystemChatPacket(Component.text(profile.getName() + " 完成了挑战").append(Component.text("[欢迎来到Slider]").color(NamedTextColor.DARK_PURPLE)), false));
+                    }
                 }
         );
 
@@ -188,12 +216,6 @@ public class MinecraftServer {
         server.addListener(new ServerAdapter() {
             @Override
             public void serverClosed(ServerClosedEvent event) {
-                playerSessions.clear();
-                playerProfiles.clear();
-                Register.destroy();
-                RunningData.playerList.clear();
-                WorldManager.worldMap.forEach((key, world) -> world.stop());
-
                 logger.info("服务器已关闭");
             }
 
@@ -257,7 +279,14 @@ public class MinecraftServer {
         }).start();
     }
 
-    public static TcpServer getServer() {
-        return server;
+    public static void stop() {
+        logger.info("正在关闭服务器...");
+        playerSessions.clear();
+        playerProfiles.clear();
+        Register.destroy();
+        RunningData.playerList.clear();
+        WorldManager.worldMap.forEach((key, world) -> world.stop());
+        server.close();
+        System.exit(0);
     }
 }

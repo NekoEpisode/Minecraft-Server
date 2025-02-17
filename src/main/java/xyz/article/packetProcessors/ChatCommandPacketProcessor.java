@@ -39,7 +39,7 @@ public class ChatCommandPacketProcessor implements PacketProcessor {
                     session.send(new ClientboundSystemChatPacket(Component.text("未知的命令！").color(NamedTextColor.RED), false));
                 }
 
-                log.info(player.getName() + " 使用了命令 /" + commandPacket.getCommand());
+                log.info(player.getName() + " 使用了命令 \"/" + commandPacket.getCommand() + "\"");
             }
         }
     }

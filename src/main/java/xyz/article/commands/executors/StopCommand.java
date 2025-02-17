@@ -13,12 +13,12 @@ public class StopCommand implements CommandExecutor {
     public void execute(CommandSender commandSender, String[] args) {
         if (commandSender instanceof Player player) {
             if (Settings.ALLOW_PLAYER_USE_CLOSE_COMMAND) {
-                MinecraftServer.getServer().close();
+                MinecraftServer.stop();
             } else {
                 player.sendMessage(Component.text("玩家不能执行这个命令！").color(NamedTextColor.RED));
             }
         } else {
-            MinecraftServer.getServer().close();
+            MinecraftServer.stop();
         }
     }
 }
