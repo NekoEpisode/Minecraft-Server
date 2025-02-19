@@ -94,15 +94,14 @@ public class PlayerActionPacketProcessor implements PacketProcessor {
                             double z = location.pos().getZ();
 
                             int slot = player.getMainHand().getCurrentSlot() + 36;
-                            int amount = player.getInventory().getItem(slot).getAmount();
+                            int amount = itemStack.getAmount();
                             if (amount > 1) {
-                                amount--;
-                                ItemStack itemStack1 = new ItemStack(player.getInventory().getItem(slot).getId(), amount, player.getInventory().getItem(slot).getDataComponents());
+                                ItemStack itemStack1 = new ItemStack(player.getInventory().getItem(slot).getId(), amount - 1, player.getInventory().getItem(slot).getDataComponents());
                                 player.getInventory().setItem(slot, itemStack1);
                             } else {
                                 player.getInventory().setItem(slot, null);
                             }
-                            player.sendPacket(new ClientboundContainerSetContentPacket(-1, 0, player.getInventory().getItems(), player.getInventory().getDragging()));
+                            player.sendPacket(new ClientboundContainerSetContentPacket(player.getInventory().getContainerId(), 0, player.getInventory().getItems(), player.getInventory().getDragging()));
                             // 发送生成物品实体的数据包
                             Entity entity = new ItemEntity(new Location(player.getWorld(), Vector3d.from(x, y, z)), EntityType.ITEM, id, itemStack, System.currentTimeMillis());
                             player.getWorld().getEntities().add(entity);

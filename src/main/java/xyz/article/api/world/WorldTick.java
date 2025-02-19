@@ -43,7 +43,7 @@ public class WorldTick {
 
         //计算时间
         // 每次 tick 增加 1 个刻度
-        world.worldTime = world.worldTime + 2;
+        world.worldTime = world.worldTime + 1;
 
         for (Session session : world.getSessions()) {
             session.send(new ClientboundSetTimePacket(worldAge, world.worldTime));
@@ -134,7 +134,7 @@ public class WorldTick {
                                     }
                                     System.out.println("捡起, slot" + slot);
                                     inventory.setItem(slot, itemStack);
-                                    closestPlayer.sendPacket(new ClientboundContainerSetContentPacket(0, 0, inventory.getItems(), inventory.getDragging()));
+                                    closestPlayer.sendPacket(new ClientboundContainerSetContentPacket(inventory.getContainerId(), 0, inventory.getItems(), inventory.getDragging()));
                                 }
                             }
                         }
