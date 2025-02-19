@@ -85,7 +85,7 @@ public class WorldTick {
                 }
             }
 
-            // FIXME: 这里的物品捡起了两次
+            // FIXME: 代码逻辑不是很对，有bug
             if (entity instanceof ItemEntity itemEntity) {
                 long currentTime1 = System.currentTimeMillis();
                 if (currentTime1 - itemEntity.getSpawnTime() > 2500) {
