@@ -1,6 +1,7 @@
 package xyz.article.api.world;
 
 import org.geysermc.mcprotocollib.network.Session;
+import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.ClientboundRemoveEntitiesPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.ClientboundTeleportEntityPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.inventory.ClientboundContainerSetContentPacket;
@@ -9,7 +10,7 @@ import xyz.article.api.Location;
 import xyz.article.api.entity.Entity;
 import xyz.article.api.entity.ItemEntity;
 import xyz.article.api.entity.player.Player;
-import xyz.article.api.inventory.Inventory;
+import xyz.article.api.inventory.PlayerInventory;
 
 import java.util.*;
 
@@ -84,7 +85,7 @@ public class WorldTick {
                 }
             }
 
-            // FIXME: 这里的物品捡起了两次，且物品并不会叠加
+            // FIXME: 这里的物品捡起了两次
             if (entity instanceof ItemEntity itemEntity) {
                 long currentTime1 = System.currentTimeMillis();
                 if (currentTime1 - itemEntity.getSpawnTime() > 2500) {
@@ -101,23 +102,39 @@ public class WorldTick {
 
                     if (closestPlayer != null) {
                         int slot = -1;
-                        Inventory inventory = closestPlayer.getInventory();
+                        PlayerInventory inventory = closestPlayer.getInventory();
                         for (int i = 9; i < inventory.getSize() - 2; i++) {
-                            if (inventory.getItem(i) == null) {
+                            ItemStack itemStack = inventory.getItem(i);
+                            if (itemStack != null) {
+                                if (itemStack.getAmount() < 64 && itemStack.equals(itemEntity.getItemStack())) {
+                                    slot = i;
+                                    break;
+                                }
+                            }
+                            if (itemStack == null) {
                                 slot = i;
                                 break;
                             }
                         }
 
                         if (slot != -1) {
-                            final double PICKUP_RANGE = 2.5;
+                            final double PICKUP_RANGE = 1.5;
                             if (closestPlayerDistance < PICKUP_RANGE) {
+                                ItemStack itemStack;
+                                if (inventory.getItem(slot) != null) {
+                                    ItemStack itemStack1 = inventory.getItem(slot);
+                                    itemStack = new ItemStack(itemStack1.getId(), itemStack1.getAmount() + 1, itemStack1.getDataComponents());
+                                }else {
+                                    itemStack = itemEntity.getItemStack();
+                                }
                                 if (world.getEntities().contains(entity)) {
                                     world.getEntities().remove(entity);
-                                    closestPlayer.sendPacket(new ClientboundRemoveEntitiesPacket(new int[]{entity.getEntityId()}));
+                                    for (Player player : playerList) {
+                                        player.sendPacket(new ClientboundRemoveEntitiesPacket(new int[]{entity.getEntityId()}));
+                                    }
                                     System.out.println("捡起, slot" + slot);
-                                    inventory.setItem(slot, itemEntity.getItemStack());
-                                    closestPlayer.sendPacket(new ClientboundContainerSetContentPacket(-1, 0, inventory.getItems(), inventory.getItem(36)));
+                                    inventory.setItem(slot, itemStack);
+                                    closestPlayer.sendPacket(new ClientboundContainerSetContentPacket(0, 0, inventory.getItems(), inventory.getDragging()));
                                 }
                             }
                         }
