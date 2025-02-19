@@ -41,7 +41,7 @@ public class World {
      */
     private void startTicking() {
         log.info("世界 {} 初始化完成", key);
-        scheduler.scheduleAtFixedRate(worldTick::tick, 0, TICK_INTERVAL, TimeUnit.MILLISECONDS);
+        scheduler.scheduleAtFixedRate(worldTick::tick, 0, TICK_INTERVAL, TimeUnit.MILLISECONDS); // Tick逻辑在WorldTick类中
     }
 
     /**
@@ -99,16 +99,30 @@ public class World {
 
     /**
      * 设置世界时间
-     * @param worldTime 世界时间
+     *
+     * @param worldTime 设置的世界时间(0-24000)
      */
     public synchronized void setWorldTime(int worldTime) {
         this.worldTime = worldTime;
     }
 
+    /**
+     * 获取世界时间
+     *
+     * @return 返回0-24000之间的世界时间(int)
+     */
     public synchronized int getWorldTime() {
         return worldTime;
     }
 
+    /**
+     * 设置世界内某个坐标的方块(开销较大)
+     *
+     * @param x 方块x坐标
+     * @param y 方块y坐标
+     * @param z 方块z坐标
+     * @param blockID 方块调色板ID
+     */
     public synchronized void setBlock(int x, int y, int z, int blockID) {
         int chunkX = x >> 4;
         int chunkZ = z >> 4;

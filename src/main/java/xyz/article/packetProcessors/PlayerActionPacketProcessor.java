@@ -102,7 +102,7 @@ public class PlayerActionPacketProcessor implements PacketProcessor {
                             } else {
                                 player.getInventory().setItem(slot, null);
                             }
-                            player.sendPacket(new ClientboundContainerSetContentPacket(-1, 0, player.getInventory().getItems(), player.getInventory().getItem(36)));
+                            player.sendPacket(new ClientboundContainerSetContentPacket(-1, 0, player.getInventory().getItems(), player.getInventory().getDragging()));
                             // 发送生成物品实体的数据包
                             Entity entity = new ItemEntity(new Location(player.getWorld(), Vector3d.from(x, y, z)), EntityType.ITEM, id, itemStack, System.currentTimeMillis());
                             player.getWorld().getEntities().add(entity);

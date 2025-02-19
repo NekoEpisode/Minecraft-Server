@@ -1,14 +1,10 @@
 package xyz.article.api.world;
 
-import org.cloudburstmc.math.vector.Vector3d;
 import org.geysermc.mcprotocollib.network.Session;
-import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.ClientboundRemoveEntitiesPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.ClientboundSetEntityMotionPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.ClientboundTeleportEntityPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.inventory.ClientboundContainerSetContentPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundSetTimePacket;
-import org.jetbrains.annotations.NotNull;
 import xyz.article.api.Location;
 import xyz.article.api.entity.Entity;
 import xyz.article.api.entity.ItemEntity;
@@ -88,6 +84,7 @@ public class WorldTick {
                 }
             }
 
+            // FIXME: 这里的物品捡起了两次，且物品并不会叠加
             if (entity instanceof ItemEntity itemEntity) {
                 long currentTime1 = System.currentTimeMillis();
                 if (currentTime1 - itemEntity.getSpawnTime() > 2500) {

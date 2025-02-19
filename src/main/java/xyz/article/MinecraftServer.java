@@ -52,6 +52,7 @@ import xyz.article.api.command.CommandSender;
 import xyz.article.api.interfaces.PacketProcessor;
 import xyz.article.api.inventory.Inventory;
 import xyz.article.api.entity.player.Player;
+import xyz.article.api.inventory.PlayerInventory;
 import xyz.article.api.world.World;
 import xyz.article.api.world.WorldManager;
 import xyz.article.api.world.block.ItemToBlock;
@@ -120,10 +121,10 @@ public class MinecraftServer {
                     List<Key> worldNames = new ArrayList<>();
                     WorldManager.worldMap.forEach((key, world) -> worldNames.add(key));
                     int entityID = new Random().nextInt(0, 999999999);
-                    session.send(new ClientboundLoginPacket(entityID, false, worldNames.toArray(new Key[0]), 0, 10, 16, false, false, false, new PlayerSpawnInfo(0, Key.key("minecraft:overworld"), 100, GameMode.CREATIVE, GameMode.CREATIVE, false, false, null, 100), true));
+                    session.send(new ClientboundLoginPacket(entityID, false, worldNames.toArray(new Key[0]), Settings.MAX_PLAYERS, Settings.VIEW_DISTANCE, 16, false, false, false, new PlayerSpawnInfo(0, Key.key("minecraft:overworld"), 100, GameMode.CREATIVE, GameMode.CREATIVE, false, false, null, 100), true));
                     logger.info("{} 加入了游戏", profile.getName());
-                    Component component = Component.text(profile.getName() + " 加入了游戏, EntityID = " + entityID).color(NamedTextColor.YELLOW);
-                    Inventory inventory = new Inventory(profile.getName() + "'s Inventory", ContainerType.GENERIC_9X6, 47, -1);
+                    Component component = Component.text(profile.getName() + " 加入了游戏").color(NamedTextColor.YELLOW);
+                    PlayerInventory inventory = new PlayerInventory(profile.getName() + "'s Inventory");
                     Player player = new Player(profile, session, entityID, GameMode.CREATIVE, inventory, overworld, new Location(overworld, Vector3d.from(8.5, 65, 8.5)), Vector2f.from(0, 0));
                     RunningData.playerList.add(player);
                     session.send(ProtocolSender.getPlayerInfoPacketALL());
@@ -180,10 +181,11 @@ public class MinecraftServer {
                         }
                     }
 
-                    session.send(new ClientboundSetChunkCacheRadiusPacket(10));
+                    session.send(new ClientboundSetChunkCacheRadiusPacket(Settings.VIEW_DISTANCE));
                     session.send(new ClientboundSetDefaultSpawnPositionPacket(Vector3i.from(8.5, 65, 8.5), 0F));
                     CommandManager.sendPacket(session);
 
+                    // FIXME: 玩家应当进入服务器立刻解锁此成就，但并未实现
                     Map<String, Map<String, Long>> progress = new HashMap<>();
                     Map<String, Long> welcomeProgress = new HashMap<>();
                     welcomeProgress.put("slider:join", System.currentTimeMillis());

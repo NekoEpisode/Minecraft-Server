@@ -6,7 +6,7 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.inventory.C
 import xyz.article.api.Slider;
 import xyz.article.api.entity.player.Player;
 import xyz.article.api.interfaces.PacketProcessor;
-import xyz.article.api.inventory.Inventory;
+import xyz.article.api.inventory.PlayerInventory;
 
 public class ContainerClosePacketProcessor implements PacketProcessor {
     @Override
@@ -15,7 +15,7 @@ public class ContainerClosePacketProcessor implements PacketProcessor {
             if (closePacket.getContainerId() == 0) {
                 Player player = Slider.getPlayer(session);
                 if (player != null) {
-                    Inventory inventory = player.getInventory();
+                    PlayerInventory inventory = player.getInventory();
                     if (inventory.getItem(0) != null) {
 
                     }

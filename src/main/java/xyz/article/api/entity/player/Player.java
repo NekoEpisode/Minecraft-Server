@@ -13,6 +13,7 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.inventory.C
 import xyz.article.api.Location;
 import xyz.article.api.command.CommandSender;
 import xyz.article.api.inventory.Inventory;
+import xyz.article.api.inventory.PlayerInventory;
 import xyz.article.api.world.World;
 import org.geysermc.mcprotocollib.network.packet.Packet;
 
@@ -25,14 +26,14 @@ public class Player extends CommandSender {
 
     private GameMode gameMode;
     private World world;
-    private Inventory inventory;
+    private PlayerInventory inventory;
 
     private final Hand mainHand;
     private final Hand leftHand;
     private Location location;
     private Vector2f angle;
 
-    public Player(GameProfile profile, Session session, int entityID, GameMode gameMode, Inventory inventory, World world, Location location, Vector2f angle) {
+    public Player(GameProfile profile, Session session, int entityID, GameMode gameMode, PlayerInventory inventory, World world, Location location, Vector2f angle) {
         this.profile = profile;
         this.session = session;
         this.entityID = entityID;
@@ -67,11 +68,11 @@ public class Player extends CommandSender {
         this.gameMode = gameMode;
     }
 
-    public Inventory getInventory() {
+    public PlayerInventory getInventory() {
         return inventory;
     }
 
-    public void setInventory(Inventory inventory) {
+    public void setInventory(PlayerInventory inventory) {
         this.inventory = inventory;
     }
 
@@ -139,5 +140,12 @@ public class Player extends CommandSender {
     
     public void sendPacket(Packet packet){
         session.send(packet);
+    }
+
+
+    public void throwItem(int slot) {
+        if (slot < 0 || slot >= 36) {
+            throw new IllegalArgumentException("Slot out of bounds (0-35 but received " + slot + ")");
+        }
     }
 }

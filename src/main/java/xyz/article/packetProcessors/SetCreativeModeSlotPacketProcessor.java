@@ -24,17 +24,17 @@ public class SetCreativeModeSlotPacketProcessor implements PacketProcessor {
     @Override
     public void process(Packet packet, Session session) {
         if (packet instanceof ServerboundSetCreativeModeSlotPacket creativeModeSlotPacket) {
-            //log.info("{} 拿取了ID为 {} 的物品", Objects.requireNonNull(Slider.getPlayer(session)).getProfile().getName(), Objects.requireNonNull(creativeModeSlotPacket.getClickedItem()).getId());
-
             ItemStack itemStack = creativeModeSlotPacket.getClickedItem();
             int slot = creativeModeSlotPacket.getSlot();
             Player player = Slider.getPlayer(session);
             if (itemStack == null) {
                 if (player != null) {
                     ItemStack itemStack1 = player.getInventory().getItem(slot);
-                    player.getInventory().setItem(slot, null);
-                    player.getInventory().setItem(46, itemStack1); // slot46保存玩家鼠标目前拖动的方块
-                    session.send(new ClientboundContainerSetContentPacket(player.getInventory().getContainerId(), 0, player.getInventory().getItems(), itemStack1));
+                    if (itemStack1 != null) {
+                        player.getInventory().setItem(slot, null);
+                        player.getInventory().setDragging(itemStack1);
+                        session.send(new ClientboundContainerSetContentPacket(player.getInventory().getContainerId(), 0, player.getInventory().getItems(), itemStack1));
+                    }
                     return;
                 }
             }
