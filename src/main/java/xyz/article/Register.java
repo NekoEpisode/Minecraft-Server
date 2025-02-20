@@ -14,10 +14,20 @@ public class Register {
     private static final List<PacketProcessor> packetProcessors = new CopyOnWriteArrayList<>();
     private static final Map<String, CommandExecutor> commandExecutors = new ConcurrentHashMap<>();
 
+    /**
+     * 注册数据包处理器
+     * @param processor 数据包处理器实例，需实现PacketProcessor接口
+     */
     public static void registerPacketProcessor(PacketProcessor processor) {
         packetProcessors.add(processor);
     }
 
+    /**
+     * 注册一个命令
+     *
+     * @param name 命令名称
+     * @param commandExecutor 命令处理器实例，需实现CommandExecutor接口
+     */
     public static void registerCommand(String name, CommandExecutor commandExecutor) {
         commandExecutors.put(name.toLowerCase(), commandExecutor);
     }
