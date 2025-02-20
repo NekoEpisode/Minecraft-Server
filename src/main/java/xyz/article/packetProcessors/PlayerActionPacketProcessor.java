@@ -26,6 +26,7 @@ import xyz.article.api.entity.ItemEntity;
 import xyz.article.api.interfaces.PacketProcessor;
 import xyz.article.api.entity.player.Player;
 import xyz.article.api.world.World;
+import xyz.article.api.world.block.BlockItemMap;
 import xyz.article.api.world.block.BlockPos;
 import xyz.article.api.world.chunk.ChunkData;
 import xyz.article.api.world.chunk.ChunkPos;
@@ -73,10 +74,19 @@ public class PlayerActionPacketProcessor implements PacketProcessor {
                         ChunkSection[] chunkSections = chunk.getChunkSections();
                         ChunkSection targetSection = chunkSections[chunkSectionIndex];
                         Vector3i inChunkSectionLocation = Slider.getInChunkSectionLocation(blockPos.pos().getX(), blockPos.pos().getY(), blockPos.pos().getZ(), chunkSectionIndex);
+                        int id = new Random().nextInt();
+                        ItemEntity entity = new ItemEntity(new Location(player.getWorld(), Vector3d.from(blockPos.pos().getX(), blockPos.pos().getY(), blockPos.pos().getZ())), EntityType.ITEM, new Random().nextInt(), new ItemStack(BlockItemMap.getItemID(targetSection.getBlock(inChunkSectionLocation.getX(), inChunkSectionLocation.getY(), inChunkSectionLocation.getZ()))), System.currentTimeMillis());
                         targetSection.setBlock(inChunkSectionLocation.getX(), inChunkSectionLocation.getY(), inChunkSectionLocation.getZ(), 0);
                         session.send(new ClientboundBlockChangedAckPacket(actionPacket.getSequence()));
                         for (Session session1 : MinecraftServer.playerSessions) {
                             session1.send(chunk.getChunkPacket());
+                        }
+                        for (Session session1 : world.getSessions()) {
+                            session1.send(new ClientboundAddEntityPacket(id, UUID.randomUUID(), EntityType.ITEM, blockPos.pos().getX(), blockPos.pos().getY(), blockPos.pos().getZ(), 0, 0, 0));
+                            session1.send(new ClientboundSetEntityDataPacket(id, new EntityMetadata[] {
+                                    new ObjectEntityMetadata<>(8, MetadataType.ITEM, entity.getItemStack())
+                            }));
+                            world.getEntities().add(entity);
                         }
                     }
                 }
@@ -103,7 +113,7 @@ public class PlayerActionPacketProcessor implements PacketProcessor {
                             }
                             player.sendPacket(new ClientboundContainerSetContentPacket(player.getInventory().getContainerId(), 0, player.getInventory().getItems(), player.getInventory().getDragging()));
                             // 发送生成物品实体的数据包
-                            Entity entity = new ItemEntity(new Location(player.getWorld(), Vector3d.from(x, y, z)), EntityType.ITEM, id, itemStack, System.currentTimeMillis());
+                            ItemEntity entity = new ItemEntity(new Location(player.getWorld(), Vector3d.from(x, y, z)), EntityType.ITEM, id, itemStack, System.currentTimeMillis());
                             player.getWorld().getEntities().add(entity);
                             session.send(new ClientboundAddEntityPacket(id, uuid, EntityType.ITEM, x, y, z, 0, 0, 0));
                             session.send(new ClientboundSetEntityDataPacket(id, new EntityMetadata[] {

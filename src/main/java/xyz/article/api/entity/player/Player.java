@@ -142,10 +142,9 @@ public class Player extends CommandSender {
         session.send(packet);
     }
 
-
     public void throwItem(int slot) {
-        if (slot < 0 || slot >= 36) {
-            throw new IllegalArgumentException("Slot out of bounds (0-35 but received " + slot + ")");
+        if (slot < 0 || slot >= 46) {
+            throw new IllegalArgumentException("Slot out of bounds (0-46 but received " + slot + ")");
         }
     }
 }

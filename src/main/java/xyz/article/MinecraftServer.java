@@ -47,7 +47,7 @@ import xyz.article.api.entity.player.Player;
 import xyz.article.api.inventory.PlayerInventory;
 import xyz.article.api.world.World;
 import xyz.article.api.world.WorldManager;
-import xyz.article.api.world.block.ItemToBlock;
+import xyz.article.api.world.block.BlockItemMap;
 import xyz.article.api.world.chunk.ChunkData;
 import xyz.article.commands.CommandManager;
 
@@ -70,7 +70,7 @@ public class MinecraftServer {
 
         Settings.init(propertiesFile);
         Register.registerALL();
-        ItemToBlock.writeMap();
+        BlockItemMap.writeMap();
 
         SessionService sessionService = new SessionService();
         sessionService.setProxy(AUTH_PROXY);

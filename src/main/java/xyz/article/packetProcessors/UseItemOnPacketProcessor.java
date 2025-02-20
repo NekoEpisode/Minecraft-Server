@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 import xyz.article.MinecraftServer;
 import xyz.article.api.Slider;
 import xyz.article.api.interfaces.PacketProcessor;
-import xyz.article.api.world.block.ItemToBlock;
+import xyz.article.api.world.block.BlockItemMap;
 import xyz.article.api.world.chunk.ChunkData;
 
 import java.util.Objects;
@@ -85,7 +85,7 @@ public class UseItemOnPacketProcessor implements PacketProcessor {
                     if (item != null) {
                         id = item.getId();
                     }
-                    int blockID = ItemToBlock.getBlockID(id);
+                    int blockID = BlockItemMap.getBlockID(id);
                     if (blockID == 0) {
                         session.send(new ClientboundBlockChangedAckPacket(useItemOnPacket.getSequence()));
                         session.send(new ClientboundSystemChatPacket(Component.text("没有获取到你手中方块物品对应的方块！").color(NamedTextColor.RED), false));
