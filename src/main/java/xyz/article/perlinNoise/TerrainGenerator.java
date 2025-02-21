@@ -24,11 +24,17 @@ public class TerrainGenerator {
     private final PerlinNoise perlinNoise;
     private final double SCALE;
 
-    public TerrainGenerator(long seed, double SCALE){ //这是噪声地形生成器，具体的噪声参数在PerlinNoise类里
+    public TerrainGenerator(long seed, double SCALE){
         perlinNoise = new PerlinNoise(seed);
         this.SCALE = SCALE;
     }
 
+    /**
+     * 计算光照数据
+     *
+     * @param heightMap 高度图
+     * @return 光照数据
+     */
     private LightUpdateData calculateLighting(HeightMap heightMap) {
         BitSet skyLight = new BitSet(16 * 16 * 256);
         BitSet blockLight = new BitSet(16 * 16 * 256);
@@ -37,22 +43,11 @@ public class TerrainGenerator {
             for (int z = 0; z < 16; z++) {
                 int height = heightMap.getHeight(x, z);
 
-                // 设置天空光照
                 for (int y = 0; y < 256; y++) {
-                    if (y >= height) {
-                        // 地表及以上，天空光照为最大值（15）
-                        skyLight.set(y * 16 * 16 + z * 16 + x, true);
-                    } else {
-                        // 地表以下，天空光照逐渐减少
-                        int lightLevel = 15 - (height - y);
-                        if (lightLevel < 0) lightLevel = 0;
-                        skyLight.set(y * 16 * 16 + z * 16 + x, lightLevel > 0);
-                    }
+                    skyLight.set(y * 16 * 16 + z * 16 + x, y > height);
                 }
-
-                // 设置方块光照（暂时全部为 0）
                 for (int y = 0; y < 256; y++) {
-                    blockLight.set(y * 16 * 16 + z * 16 + x, true);
+                    blockLight.set(y * 16 * 16 + z * 16 + x, false);
                 }
             }
         }
@@ -92,11 +87,11 @@ public class TerrainGenerator {
                             for (int y = 0; y < 16; y++) {
                                 int blockY = i * 16 + y;
                                 if (blockY < height) {
-                                    section.setBlock(x, y, z, 1);
+                                    section.setBlock(x, y, z, 1); // 设置地面方块（例如石头）
                                 } else if (blockY == height) {
-                                    section.setBlock(x, y, z, 9);
+                                    section.setBlock(x, y, z, 9); // 设置地表方块（例如草方块）
                                 } else {
-                                    section.setBlock(x, y, z, 0);
+                                    section.setBlock(x, y, z, 0); // 设置空气方块
                                 }
                             }
                         }
@@ -110,10 +105,6 @@ public class TerrainGenerator {
                 LightUpdateData lightUpdateData = calculateLighting(heightMap);
 
                 BlockEntityInfo[] blockEntities = new BlockEntityInfo[]{};
-                if (MinecraftServer.overworld.getChunkDataMap().get(chunkPos) != null) {
-                    return null;
-                }
-
                 chunks[row][column] = new ChunkData(new ChunkPos(MinecraftServer.overworld, chunkPos), chunkSections, heightMap, blockEntities, lightUpdateData);
 
                 // 更新已完成区块数量
@@ -144,7 +135,7 @@ public class TerrainGenerator {
                 if (surfaceY < -63 || surfaceY >= 319) continue; // 确保高度在有效范围内
 
                 // 随机决定是否生成树
-                if (random.nextDouble() < 0.015) { // 1.5% 的概率生成树
+                if (random.nextDouble() < 0.02) { // 2% 的概率生成树
                     int treeHeight = random.nextInt(4) + 4; // 树的高度在 4 到 7 之间
                     generateTree(chunkSections, x, surfaceY + 1, z, treeHeight);
                 }
@@ -164,7 +155,7 @@ public class TerrainGenerator {
     private void generateTree(ChunkSection[] chunkSections, int x, int y, int z, int height) {
         // 生成树干
         for (int i = 0; i < height; i++) {
-            setBlock(chunkSections, x, y + i, z, GlobalPalette.INSTANCE.idToState(17)); // 5 是原木的方块 ID
+            setBlock(chunkSections, x, y + i, z, 5); // 5 是原木的方块 ID
         }
 
         // 生成树叶
@@ -174,7 +165,7 @@ public class TerrainGenerator {
                 for (int dz = -2; dz <= 2; dz++) {
                     // 限制树叶的范围
                     if (Math.abs(dx) + Math.abs(dz) <= 3) {
-                        setBlock(chunkSections, x + dx, dy, z + dz, GlobalPalette.INSTANCE.idToState(18)); // 6 是树叶的方块 ID
+                        setBlock(chunkSections, x + dx, dy, z + dz, 6); // 6 是树叶的方块 ID
                     }
                 }
             }

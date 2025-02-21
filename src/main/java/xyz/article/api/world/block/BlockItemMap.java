@@ -1,5 +1,7 @@
 package xyz.article.api.world.block;
 
+import org.geysermc.mcprotocollib.protocol.data.game.chunk.palette.GlobalPalette;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,7 +30,7 @@ public class BlockItemMap {
         itemToBlockMap.put(40, 19); // Acacia Planks
         itemToBlockMap.put(41, 20); // Cherry Planks
         itemToBlockMap.put(42, 21); // Dark Oak Planks
-        itemToBlockMap.put(299, 156); // Chest (错误)
+        itemToBlockMap.put(299, 161); // Chest (错误)
 
         // 同时填充方块到物品的映射
         for (Map.Entry<Integer, Integer> entry : itemToBlockMap.entrySet()) {

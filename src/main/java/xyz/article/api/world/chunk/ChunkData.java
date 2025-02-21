@@ -2,6 +2,7 @@ package xyz.article.api.world.chunk;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import org.cloudburstmc.math.vector.Vector2i;
 import org.geysermc.mcprotocollib.protocol.codec.MinecraftCodecHelper;
 import org.geysermc.mcprotocollib.protocol.data.game.chunk.BitStorage;
 import org.geysermc.mcprotocollib.protocol.data.game.chunk.ChunkSection;
@@ -30,6 +31,8 @@ public class ChunkData {
         blockEntities = new BlockEntityInfo[]{};
         heightMap = new HeightMap();
         lightUpdateData = new LightUpdateData(new BitSet(), new BitSet(), new BitSet(), new BitSet(), List.of(), List.of());
+
+        chunkPos.world().getChunkDataMap().put(Vector2i.from(chunkPos.pos().getX(), chunkPos.pos().getY()), this);
     }
     public ChunkData(ChunkPos chunkPos, ChunkSection[] chunkSections, HeightMap heightMap, BlockEntityInfo[] blockEntities, LightUpdateData lightUpdateData) {
         this.chunkSections = chunkSections;
@@ -37,6 +40,8 @@ public class ChunkData {
         this.blockEntities = blockEntities;
         this.heightMap = heightMap;
         this.lightUpdateData = lightUpdateData;
+
+        chunkPos.world().getChunkDataMap().put(Vector2i.from(chunkPos.pos().getX(), chunkPos.pos().getY()), this);
     }
 
     // Getter/Setters

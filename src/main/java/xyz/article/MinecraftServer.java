@@ -19,6 +19,7 @@ import org.geysermc.mcprotocollib.protocol.MinecraftConstants;
 import org.geysermc.mcprotocollib.protocol.MinecraftProtocol;
 import org.geysermc.mcprotocollib.protocol.codec.MinecraftCodec;
 import org.geysermc.mcprotocollib.protocol.data.game.advancement.Advancement;
+import org.geysermc.mcprotocollib.protocol.data.game.chunk.palette.GlobalPalette;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.GameMode;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.PlayerSpawnInfo;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.type.EntityType;
@@ -50,6 +51,7 @@ import xyz.article.api.world.WorldManager;
 import xyz.article.api.world.block.BlockItemMap;
 import xyz.article.api.world.chunk.ChunkData;
 import xyz.article.commands.CommandManager;
+import xyz.article.perlinNoise.TerrainGenerator;
 
 import java.io.File;
 import java.io.IOException;
@@ -146,18 +148,12 @@ public class MinecraftServer {
 
                     int width = endX - startX + 1;
                     int length = endZ - startZ + 1;
-                    ChunkData[][] data = new TerrainGenerator(new Random().nextLong(), 0.02).generateTerrain(width, length);
+                    ChunkData[][] data = new TerrainGenerator(12345L, 0.02).generateTerrain(width, length);
 
                     for (int i = 0; i < width; i++) {
                         for (int l = 0; l < length; l++) {
                             // 计算实际的区块坐标
-                            int chunkX = startX + i;
-                            int chunkZ = startZ + l;
-                            if (data == null) {
-                                session.send(player.getWorld().getChunkDataMap().get(Vector2i.from(chunkX, chunkZ)).getChunkPacket());
-                                return;
-                            }
-                            //session.send(data[i][l].getChunkPacket());
+                            session.send(data[i][l].getChunkPacket());
                         }
                     }*/
 
