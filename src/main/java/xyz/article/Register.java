@@ -54,6 +54,7 @@ public class Register {
         registerCommand("tps", new TPSCommand());
         registerCommand("gamemode", new GameModeCommand());
         registerCommand("stop", new StopCommand());
+        registerCommand("say", new SayCommand());
     }
 
     protected static void destroy() {

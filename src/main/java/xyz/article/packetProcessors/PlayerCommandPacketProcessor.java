@@ -2,15 +2,11 @@ package xyz.article.packetProcessors;
 
 import org.geysermc.mcprotocollib.network.Session;
 import org.geysermc.mcprotocollib.network.packet.Packet;
-import org.geysermc.mcprotocollib.protocol.data.game.entity.EntityEvent;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.ClientboundEntityEventPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundPlayerCommandPacket;
 import xyz.article.MinecraftServer;
 import xyz.article.api.Slider;
 import xyz.article.api.entity.player.Player;
 import xyz.article.api.interfaces.PacketProcessor;
-
-import java.util.Objects;
 
 public class PlayerCommandPacketProcessor implements PacketProcessor {
     @Override

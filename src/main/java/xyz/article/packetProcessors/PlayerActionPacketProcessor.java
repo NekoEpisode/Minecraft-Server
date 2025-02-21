@@ -1,5 +1,6 @@
 package xyz.article.packetProcessors;
 
+import net.kyori.adventure.text.Component;
 import org.cloudburstmc.math.vector.Vector3d;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.mcprotocollib.network.Session;
@@ -75,7 +76,11 @@ public class PlayerActionPacketProcessor implements PacketProcessor {
                         ChunkSection targetSection = chunkSections[chunkSectionIndex];
                         Vector3i inChunkSectionLocation = Slider.getInChunkSectionLocation(blockPos.pos().getX(), blockPos.pos().getY(), blockPos.pos().getZ(), chunkSectionIndex);
                         int id = new Random().nextInt();
-                        ItemEntity entity = new ItemEntity(new Location(player.getWorld(), Vector3d.from(blockPos.pos().getX(), blockPos.pos().getY(), blockPos.pos().getZ())), EntityType.ITEM, new Random().nextInt(), new ItemStack(BlockItemMap.getItemID(targetSection.getBlock(inChunkSectionLocation.getX(), inChunkSectionLocation.getY(), inChunkSectionLocation.getZ()))), System.currentTimeMillis());
+                        int itemId = BlockItemMap.getItemID(targetSection.getBlock(inChunkSectionLocation.getX(), inChunkSectionLocation.getY(), inChunkSectionLocation.getZ()));
+                        if (itemId == 0) {
+                            player.sendMessage(Component.text("未能获取到此方块的掉落物！"));
+                        }
+                        ItemEntity entity = new ItemEntity(new Location(player.getWorld(), Vector3d.from(blockPos.pos().getX(), blockPos.pos().getY(), blockPos.pos().getZ())), EntityType.ITEM, new Random().nextInt(), new ItemStack(itemId), System.currentTimeMillis());
                         targetSection.setBlock(inChunkSectionLocation.getX(), inChunkSectionLocation.getY(), inChunkSectionLocation.getZ(), 0);
                         session.send(new ClientboundBlockChangedAckPacket(actionPacket.getSequence()));
                         for (Session session1 : MinecraftServer.playerSessions) {
